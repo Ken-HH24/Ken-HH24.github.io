@@ -20,20 +20,20 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="HOC的两种方式属性代理作用：增强props缺点：无法获取原组件的状态，如生命周期等不可控 12345678910111213141516import React from &amp;#x27;react&amp;#x27;function HOC(WrappedComponent) &amp;#123;    return class AdvancedComponent extends React.Component">
+  <meta name="description" content="HOC的两种方式属性代理作用：增强props 缺点：无法获取原组件的状态，如生命周期等不可控 12345678910111213141516import React from &amp;#x27;react&amp;#x27;function HOC(WrappedComponent) &amp;#123;    return class AdvancedComponent extends React.Component">
 <meta property="og:type" content="article">
 <meta property="og:title" content="React中的HOC">
-<meta property="og:url" content="http://example.com/2021/11/19/React1/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="HOC的两种方式属性代理作用：增强props缺点：无法获取原组件的状态，如生命周期等不可控 12345678910111213141516import React from &amp;#x27;react&amp;#x27;function HOC(WrappedComponent) &amp;#123;    return class AdvancedComponent extends React.Component">
+<meta property="og:url" content="http://example.com/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="HOC的两种方式属性代理作用：增强props 缺点：无法获取原组件的状态，如生命周期等不可控 12345678910111213141516import React from &amp;#x27;react&amp;#x27;function HOC(WrappedComponent) &amp;#123;    return class AdvancedComponent extends React.Component">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-11-19T05:55:34.000Z">
-<meta property="article:modified_time" content="2021-11-19T06:39:37.913Z">
+<meta property="article:modified_time" content="2021-11-20T02:03:34.359Z">
 <meta property="article:author" content="Ken">
 <meta property="article:tag" content="React">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2021/11/19/React1/">
+<link rel="canonical" href="http://example.com/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/">
 
 
 <script id="page-configurations">
@@ -46,7 +46,7 @@
   };
 </script>
 
-  <title>React中的HOC | Hexo</title>
+  <title>React中的HOC | Ken's blog</title>
   
 
 
@@ -97,7 +97,7 @@
 
     <a href="/" class="brand" rel="start">
       <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hexo</h1>
+      <h1 class="site-title">Ken's blog</h1>
       <span class="logo-line-after"><i></i></span>
     </a>
   </div>
@@ -156,7 +156,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/19/React1/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -165,7 +165,7 @@
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hexo">
+      <meta itemprop="name" content="Ken's blog">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
@@ -178,10 +178,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2021-11-19 13:55:34 / Modified: 14:39:37" itemprop="dateCreated datePublished" datetime="2021-11-19T13:55:34+08:00">2021-11-19</time>
+              <time title="Created: 2021-11-19 13:55:34" itemprop="dateCreated datePublished" datetime="2021-11-19T13:55:34+08:00">2021-11-19</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-11-20 10:03:34" itemprop="dateModified" datetime="2021-11-20T10:03:34+08:00">2021-11-20</time>
+              </span>
 
           
 
@@ -194,17 +200,20 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="HOC的两种方式"><a href="#HOC的两种方式" class="headerlink" title="HOC的两种方式"></a>HOC的两种方式</h1><h2 id="属性代理"><a href="#属性代理" class="headerlink" title="属性代理"></a>属性代理</h2><p>作用：增强props<br>缺点：无法获取原组件的状态，如生命周期等不可控</p>
+        <h1 id="HOC的两种方式"><a href="#HOC的两种方式" class="headerlink" title="HOC的两种方式"></a>HOC的两种方式</h1><h2 id="属性代理"><a href="#属性代理" class="headerlink" title="属性代理"></a>属性代理</h2><p>作用：增强props</p>
+<p>缺点：无法获取原组件的状态，如生命周期等不可控</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">HOC</span>(<span class="params">WrappedComponent</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="title">AdvancedComponent</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="title">constructor</span>(<span class="params">props</span>)</span> &#123;</span><br><span class="line">            <span class="built_in">super</span>(props);</span><br><span class="line">            <span class="built_in">this</span>.state = &#123;</span><br><span class="line">                <span class="attr">visible</span>: <span class="literal">true</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">WrappedComponent</span> &#123;<span class="attr">...this.state</span>&#125; &#123;<span class="attr">...this.props</span>&#125; /&gt;</span></span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <span id="more"></span>
 
 <hr>
-<h2 id="反向代理"><a href="#反向代理" class="headerlink" title="反向代理"></a>反向代理</h2><p>作用：通过继承管理原组件各个生命周期<br>缺点：无法应用到函数组件中</p>
+<h2 id="反向代理"><a href="#反向代理" class="headerlink" title="反向代理"></a>反向代理</h2><p>作用：通过继承管理原组件各个生命周期</p>
+<p>缺点：无法应用到函数组件中</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">HOC</span>(<span class="params">WrappedComponent</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="title">AdvancedComponent</span> <span class="keyword">extends</span> <span class="title">WrappedComponent</span></span>&#123;</span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <hr>
-<h1 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h1><h2 id="withRouter"><a href="#withRouter" class="headerlink" title="withRouter"></a>withRouter</h2><p>通过强化 <strong>props</strong> ，把 <strong>history</strong> 等属性注入到目标组件中<br>利用 <strong>Consumer</strong> 模式消费 <strong>RouterContext</strong> ，返回新的函数组件，并转发相应的 <strong>ref</strong> 以及注入剩余的 <strong>props</strong></p>
+<h1 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h1><h2 id="withRouter"><a href="#withRouter" class="headerlink" title="withRouter"></a>withRouter</h2><p>通过强化 <strong>props</strong> ，把 <strong>history</strong> 等属性注入到目标组件中</p>
+<p>利用 <strong>Consumer</strong> 模式消费 <strong>RouterContext</strong> ，返回新的函数组件，并转发相应的 <strong>ref</strong> 以及注入剩余的 <strong>props</strong></p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; createContext &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> RouterContext = createContext();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">withRouter</span>(<span class="params">Component</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> C = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; wrappedComponentRef, ...restProps &#125; = props;</span><br><span class="line">        <span class="keyword">return</span> (</span><br><span class="line">            <span class="xml"><span class="tag">&lt;<span class="name">RouterContext.Consumer</span>&gt;</span></span></span><br><span class="line"><span class="xml">                &#123;</span></span><br><span class="line"><span class="xml">                    context =&gt; &#123;</span></span><br><span class="line"><span class="xml">                        return (</span></span><br><span class="line"><span class="xml">                            <span class="tag">&lt;<span class="name">Component</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                                <span class="attr">ref</span>=<span class="string">&#123;wrappedComponentRef&#125;</span>  // 转发<span class="attr">ref</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                                &#123;<span class="attr">...context</span>&#125;    // 路由<span class="attr">context</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                                &#123;<span class="attr">...restProps</span>&#125;  // 原组件其他的<span class="attr">props</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                            /&gt;</span></span></span><br><span class="line"><span class="xml">                        )</span></span><br><span class="line"><span class="xml">                    &#125;</span></span><br><span class="line"><span class="xml">                &#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">RouterContext.Consumer</span>&gt;</span></span></span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">    C.wrappedComponent = Component;</span><br><span class="line">    <span class="keyword">return</span> C;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> withRouter;</span><br></pre></td></tr></table></figure>
 
 <hr>
@@ -216,7 +225,8 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">dynamicHOC</span>(<span class="params">loadRouter</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="title">Context</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="title">constructor</span>(<span class="params">props</span>)</span> &#123;</span><br><span class="line">            <span class="built_in">super</span>(props);</span><br><span class="line">            <span class="built_in">this</span>.state = &#123;</span><br><span class="line">                <span class="attr">Component</span>: <span class="literal">null</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="title">componentDidMount</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">this</span>.state.Component)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            loadRouter()</span><br><span class="line">                .then(<span class="function"><span class="params">module</span> =&gt;</span> <span class="built_in">module</span>.default)</span><br><span class="line">                .then(<span class="function"><span class="params">Component</span> =&gt;</span> &#123; <span class="built_in">this</span>.setState(&#123; Component &#125;) &#125;)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> (</span><br><span class="line">                <span class="built_in">this</span>.state.component ? <span class="xml"><span class="tag">&lt;<span class="name">Component</span> &#123;<span class="attr">...this.props</span>&#125; /&gt;</span></span> : <span class="xml"><span class="tag">&lt;<span class="name">Loading</span> /&gt;</span></span></span><br><span class="line">            )</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用</span></span><br><span class="line">dynamicHOC(<span class="function">() =&gt;</span> <span class="keyword">import</span>(<span class="string">&#x27;../pages/index&#x27;</span>));</span><br></pre></td></tr></table></figure>
 
 <hr>
-<h1 id="实例：权限拦截"><a href="#实例：权限拦截" class="headerlink" title="实例：权限拦截"></a>实例：权限拦截</h1><p>场景：当用户没有登录的时候，部分页面无法访问，可以通过 <strong>HOC</strong> 避免在原有组件上面直接修改<br>思路：维护一个 <strong>permissionList</strong> 的 <strong>Context</strong> ，当对应路由组件存在于该数据结构中时，正常显示，否则显示提示页面</p>
+<h1 id="实例：权限拦截"><a href="#实例：权限拦截" class="headerlink" title="实例：权限拦截"></a>实例：权限拦截</h1><p>场景：当用户没有登录的时候，部分页面无法访问，可以通过 <strong>HOC</strong> 避免在原有组件上面直接修改</p>
+<p>思路：维护一个 <strong>permissionList</strong> 的 <strong>Context</strong> ，当对应路由组件存在于该数据结构中时，正常显示，否则显示提示页面</p>
 <ul>
 <li><strong>PermissionHOC.js</strong></li>
 </ul>
@@ -241,6 +251,13 @@
 
 
         
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2021/11/20/ReactRenderControl/" rel="next" title="React中的渲染控制">
+      React中的渲染控制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
       </footer>
     
   </article>
@@ -312,7 +329,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
