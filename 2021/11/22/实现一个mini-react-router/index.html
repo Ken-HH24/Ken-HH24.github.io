@@ -20,28 +20,32 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Ken&#39;s blog">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="BrowserRouterhistory &amp; locationreact-router 库中的 BrowserRouter 是利用 history 这个 api ，通过监听 popstate 动作实现的。 history 对象可以利用 createBrowserHistory() 这个方法获取，然后用 useMemo 缓存起来。 location 则使用 useState 保存，方便进行监">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现一个mini-react-router">
+<meta property="og:url" content="http://example.com/2021/11/22/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-router/index.html">
 <meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="BrowserRouterhistory &amp; locationreact-router 库中的 BrowserRouter 是利用 history 这个 api ，通过监听 popstate 动作实现的。 history 对象可以利用 createBrowserHistory() 这个方法获取，然后用 useMemo 缓存起来。 location 则使用 useState 保存，方便进行监">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-11-22T13:03:48.000Z">
+<meta property="article:modified_time" content="2021-11-22T14:04:55.184Z">
 <meta property="article:author" content="Ken">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2021/11/22/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-router/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>Ken's blog</title>
+  <title>实现一个mini-react-router | Ken's blog</title>
   
 
 
@@ -144,9 +148,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -162,10 +167,9 @@
       <meta itemprop="name" content="Ken's blog">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/22/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-router/" class="post-title-link" itemprop="url">实现一个mini-react-router</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          实现一个mini-react-router
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -189,7 +193,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="BrowserRouter"><a href="#BrowserRouter" class="headerlink" title="BrowserRouter"></a>BrowserRouter</h1><h2 id="history-amp-location"><a href="#history-amp-location" class="headerlink" title="history &amp; location"></a>history &amp; location</h2><p><strong>react-router</strong> 库中的 <strong>BrowserRouter</strong> 是利用 <strong>history</strong> 这个 <strong>api</strong> ，通过监听 <strong>popstate</strong> 动作实现的。</p>
+        <h1 id="BrowserRouter"><a href="#BrowserRouter" class="headerlink" title="BrowserRouter"></a>BrowserRouter</h1><h2 id="history-amp-location"><a href="#history-amp-location" class="headerlink" title="history &amp; location"></a>history &amp; location</h2><p><strong>react-router</strong> 库中的 <strong>BrowserRouter</strong> 是利用 <strong>history</strong> 这个 <strong>api</strong> ，通过监听 <strong>popstate</strong> 动作实现的。</p>
 <p><strong>history</strong> 对象可以利用 <strong>createBrowserHistory()</strong> 这个方法获取，然后用 <strong>useMemo</strong> 缓存起来。</p>
 <p><strong>location</strong> 则使用 <strong>useState</strong> 保存，方便进行监听变化后重新触发渲染。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> history = useMemo(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    rootHistory = createBrowserHistory();</span><br><span class="line">    <span class="keyword">return</span> rootHistory;</span><br><span class="line">&#125;, []);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> [location, setLocation] = useState(history.location);</span><br><span class="line"></span><br><span class="line">useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 注册监听，返回一个移除监听函数</span></span><br><span class="line">    <span class="keyword">const</span> unlisten = history.listen(<span class="function">(<span class="params">history</span>) =&gt;</span> &#123;</span><br><span class="line">        setLocation(history.location);</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 移除监听</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        unlisten &amp;&amp; unlisten();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, []);</span><br></pre></td></tr></table></figure>
@@ -233,242 +237,30 @@
 <h1 id="Link"><a href="#Link" class="headerlink" title="Link"></a>Link</h1><p><strong>Link</strong> 本质其实就是一个 <strong>&lt;a&gt;</strong> 标签，只不过他的跳转能相应地触发对应 <strong>history</strong> 的 <strong>popstate</strong> 事件。</p>
 <p>利用前面实现的 <strong>useHistory</strong> 获取对应 <strong>history</strong> 对象，然后执行 <strong>push</strong> 动作即可</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> useHitory <span class="keyword">from</span> <span class="string">&#x27;./hooks/useHistory&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> Link = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; to, children, ...restProps &#125; = props;</span><br><span class="line">    <span class="comment">// 获取history对象</span></span><br><span class="line">    <span class="keyword">const</span> history = useHitory();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> handleClick = <span class="function">(<span class="params">e</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="comment">// 阻止一切默认行为</span></span><br><span class="line">        e.preventDefault();</span><br><span class="line">        <span class="comment">// 跳转</span></span><br><span class="line">        history.push(to);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">a</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">src</span>=<span class="string">&#x27;/&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">href</span>=<span class="string">&#x27;/&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">onClick</span>=<span class="string">&#123;handleClick&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            &#123;<span class="attr">...restProps</span>&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">        &gt;</span>&#123;children&#125;<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> Link;</span><br></pre></td></tr></table></figure>
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" class="post-title-link" itemprop="url">React中的渲染优化</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-11-20 14:56:50" itemprop="dateCreated datePublished" datetime="2021-11-20T14:56:50+08:00">2021-11-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-21 21:32:03" itemprop="dateModified" datetime="2021-11-21T21:32:03+08:00">2021-11-21</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Suspense"><a href="#Suspense" class="headerlink" title="Suspense"></a>Suspense</h1><p>作用：<strong>Suspense</strong> 提供了一种方式让组件的数据请求完成后，再渲染该组件</p>
-<p>在这里可能会产生疑问，如果仅仅是针对数据请求的优化，那么 “我在全局里加一个 <strong>isLoading</strong> 变量不就好了吗？”。但是二者还是有一定差别的。</p>
-<ol>
-<li>首先，添加 <strong>isLoading</strong> 变量在数据请求前后组件都渲染了一次，无法达到：组件挂起 <strong>-&gt;</strong> 数据请求 <strong>-&gt;</strong> 组件渲染这个过程。</li>
-<li>另外在 <strong>React</strong> 官方文档中详细介绍了 <strong>Suspense</strong> 组件的存在意义。下面代码中，在 <strong>fetchUser</strong> 没有 <strong>resolve</strong> 之前，<strong>fetchPosts</strong> 是不会执行的，在一定程度上失去了异步请求的意义，官方称这种情况为 <strong>waterfall</strong></li>
-</ol>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ProfilePage</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> [user, setUser] = useState(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">  useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    fetchUser().then(<span class="function"><span class="params">u</span> =&gt;</span> setUser(u));</span><br><span class="line">  &#125;, []);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (user === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">p</span>&gt;</span>Loading profile...<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="xml"><span class="tag">&lt;&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;<span class="name">h1</span>&gt;</span>&#123;user.name&#125;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;<span class="name">ProfileTimeline</span> /&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/&gt;</span></span></span><br><span class="line">  );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">ProfileTimeline</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> [posts, setPosts] = useState(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">  useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    fetchPosts().then(<span class="function"><span class="params">p</span> =&gt;</span> setPosts(p));</span><br><span class="line">  &#125;, []);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (posts === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">h2</span>&gt;</span>Loading posts...<span class="tag">&lt;/<span class="name">h2</span>&gt;</span></span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">ul</span>&gt;</span></span></span><br><span class="line"><span class="xml">      &#123;posts.map(post =&gt; (</span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">li</span> <span class="attr">key</span>=<span class="string">&#123;post.id&#125;</span>&gt;</span>&#123;post.text&#125;<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span></span><br><span class="line"><span class="xml">      ))&#125;</span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span></span><br><span class="line">  );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E6%8E%A7%E5%88%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E6%8E%A7%E5%88%B6/" class="post-title-link" itemprop="url">React中的渲染控制</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2021-11-20 09:48:56 / Modified: 14:56:22" itemprop="dateCreated datePublished" datetime="2021-11-20T09:48:56+08:00">2021-11-20</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="useMemo"><a href="#useMemo" class="headerlink" title="useMemo"></a>useMemo</h1><p>场景：在 <strong>React</strong> 中，当父组件重新渲染的时候，子组件也会跟随着重新渲染，这个时候很有可能会造成不必要的性能损耗</p>
-<p>解决：可以使用 <strong>useMemo</strong> ，使得目标组件只在 <strong>deps</strong> 改变时才重新出发渲染</p>
-<p>以下 <strong>Index</strong> 组件无论是 <strong>numberA</strong> 还是 <strong>numberB</strong> 改变都会使 <strong>Message</strong> 组件重新渲染</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; useState &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> Message <span class="keyword">from</span> <span class="string">&#x27;./Message&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> Index = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> [numberA, setNumberA] = useState(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">const</span> [numberB, setNumberB] = useState(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            Index</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">Message</span> <span class="attr">number</span>=<span class="string">&#123;numberA&#125;</span> /&gt;</span></span></span><br><span class="line"><span class="xml">            &#123;numberB&#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; setNumberA(numberA + 1) &#125;&#125;&gt;add A<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; setNumberB(numberB + 1) &#125;&#125;&gt;add B<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> Index;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E6%8E%A7%E5%88%B6/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/20/React%E4%B8%AD%E7%9A%84%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" rel="prev" title="React中的渲染优化">
+      <i class="fa fa-chevron-left"></i> React中的渲染优化
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/" class="post-title-link" itemprop="url">React中的HOC</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-11-19 13:55:34" itemprop="dateCreated datePublished" datetime="2021-11-19T13:55:34+08:00">2021-11-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-20 10:03:34" itemprop="dateModified" datetime="2021-11-20T10:03:34+08:00">2021-11-20</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="HOC的两种方式"><a href="#HOC的两种方式" class="headerlink" title="HOC的两种方式"></a>HOC的两种方式</h1><h2 id="属性代理"><a href="#属性代理" class="headerlink" title="属性代理"></a>属性代理</h2><p>作用：增强props</p>
-<p>缺点：无法获取原组件的状态，如生命周期等不可控</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">HOC</span>(<span class="params">WrappedComponent</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="title">AdvancedComponent</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="title">constructor</span>(<span class="params">props</span>)</span> &#123;</span><br><span class="line">            <span class="built_in">super</span>(props);</span><br><span class="line">            <span class="built_in">this</span>.state = &#123;</span><br><span class="line">                <span class="attr">visible</span>: <span class="literal">true</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">WrappedComponent</span> &#123;<span class="attr">...this.state</span>&#125; &#123;<span class="attr">...this.props</span>&#125; /&gt;</span></span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
   
 
 
@@ -521,6 +313,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#BrowserRouter"><span class="nav-number">1.</span> <span class="nav-text">BrowserRouter</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#history-amp-location"><span class="nav-number">1.1.</span> <span class="nav-text">history &amp; location</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RouterContext"><span class="nav-number">1.2.</span> <span class="nav-text">RouterContext</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BrowserRouter-js"><span class="nav-number">1.3.</span> <span class="nav-text">BrowserRouter.js</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Switch"><span class="nav-number">2.</span> <span class="nav-text">Switch</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Route"><span class="nav-number">3.</span> <span class="nav-text">Route</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#newRouterContext"><span class="nav-number">3.1.</span> <span class="nav-text">newRouterContext</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#renderChildren"><span class="nav-number">3.2.</span> <span class="nav-text">renderChildren</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Route-js"><span class="nav-number">3.3.</span> <span class="nav-text">Route.js</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hooks"><span class="nav-number">4.</span> <span class="nav-text">hooks</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#useHistory-amp-useLocation"><span class="nav-number">4.1.</span> <span class="nav-text">useHistory &amp; useLocation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#useListen"><span class="nav-number">4.2.</span> <span class="nav-text">useListen</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HOC"><span class="nav-number">5.</span> <span class="nav-text">HOC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#withRouter"><span class="nav-number">5.1.</span> <span class="nav-text">withRouter</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Link"><span class="nav-number">6.</span> <span class="nav-text">Link</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
