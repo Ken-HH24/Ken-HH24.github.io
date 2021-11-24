@@ -1,5 +1,4 @@
 import React from 'react';
-import { RouterContext } from './BrowserRouter';
 import useHitory from './hooks/useHistory';
 
 const Link = (props) => {

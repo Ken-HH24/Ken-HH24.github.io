@@ -6,8 +6,6 @@ const Switch = (props) => {
     const routerContext = useContext(RouterContext);
     const location = props.location || routerContext.location;
 
-    console.log(location);
-
     let match, children;
 
     React.Children.forEach(props.children, (child) => {
