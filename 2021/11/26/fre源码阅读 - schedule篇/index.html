@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="preview偶然了解到 fre 这个框架，甚至不能称他为框架，因为他太 “小” 了，作者是这样定义他的： Tiny Concurrent UI library with Fiber 。 虽然代码量极小，却以相同的 fiber 思路，实现了 React 中的大量功能。对于想了解 React， 却又对庞大的源码无从下手的人来说，是一个极佳的学习资源。接下来就从不到 50 行的 schedule 模块">
+<meta property="og:type" content="article">
+<meta property="og:title" content="fre源码阅读 - schedule篇">
+<meta property="og:url" content="http://example.com/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="preview偶然了解到 fre 这个框架，甚至不能称他为框架，因为他太 “小” 了，作者是这样定义他的： Tiny Concurrent UI library with Fiber 。 虽然代码量极小，却以相同的 fiber 思路，实现了 React 中的大量功能。对于想了解 React， 却又对庞大的源码无从下手的人来说，是一个极佳的学习资源。接下来就从不到 50 行的 schedule 模块">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-11-26T01:25:21.000Z">
+<meta property="article:modified_time" content="2021-11-26T02:21:52.277Z">
+<meta property="article:author" content="Ken">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>fre源码阅读 - schedule篇 | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          fre源码阅读 - schedule篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-11-26 09:25:21 / Modified: 10:21:52" itemprop="dateCreated datePublished" datetime="2021-11-26T09:25:21+08:00">2021-11-26</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>偶然了解到 <strong>fre</strong> 这个框架，甚至不能称他为框架，因为他太 “小” 了，作者是这样定义他的： <strong>Tiny Concurrent UI library with Fiber</strong> 。</p>
+<p>虽然代码量极小，却以相同的 <strong>fiber</strong> 思路，实现了 <strong>React</strong> 中的大量功能。对于想了解 <strong>React</strong>， 却又对庞大的源码无从下手的人来说，是一个极佳的学习资源。接下来就从不到 50 行的 <strong>schedule</strong> 模块开始分析 <strong>fre</strong> 是如何运作的。</p>
+<h1 id="schedule"><a href="#schedule" class="headerlink" title="schedule"></a>schedule</h1><p><strong>schedule</strong> 函数很简单，仅仅是把任务 <strong>push</strong> 到了队列 <strong>queue</strong> 里面，然后执行 <strong>postTask</strong> 函数。而 <strong>postTask</strong> 一开始是一个变量，他指向 <strong>task(false)</strong> ，开启了一个微任务执行 <strong>flush</strong> 函数。对源码进行一下翻译就是：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 源码</span></span><br><span class="line"><span class="keyword">let</span> postTask = task(<span class="literal">false</span>)</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; postTask()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 翻译后</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; <span class="built_in">Promise</span>.resolve().then(flush)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p>至于 <strong>schedule</strong> 函数的执行时机，可以看到在 <strong>app</strong> 初始化执行 <strong>render</strong> 函数，或者触发了 <strong>usestate</strong> 返回的第二个参数，执行视图更新的时候，都会执行 <strong>schedule</strong>。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// app 初始化</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> render = (vnode: FreElement, <span class="attr">node</span>: Node, config?: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> rootFiber = &#123;</span><br><span class="line">    node,</span><br><span class="line">    <span class="attr">props</span>: &#123; <span class="attr">children</span>: vnode &#125;,</span><br><span class="line">  &#125; <span class="keyword">as</span> IFiber</span><br><span class="line">  <span class="keyword">if</span> (config) &#123;</span><br><span class="line">    options = config</span><br><span class="line">  &#125;</span><br><span class="line">  update(rootFiber)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> update = <span class="function">(<span class="params">fiber?: IFiber</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (fiber &amp;&amp; !(fiber.lane &amp; LANE.DIRTY)) &#123;</span><br><span class="line">    fiber.lane = LANE.UPDATE | LANE.DIRTY</span><br><span class="line">    <span class="comment">// 执行 schedule</span></span><br><span class="line">    schedule(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      effect = detach = fiber</span><br><span class="line">      <span class="keyword">return</span> reconcile(fiber)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="flush"><a href="#flush" class="headerlink" title="flush"></a>flush</h1><p><strong>flush</strong> 函数首先会获取当前时间戳，然后为当前的调度工作设置一个 <strong>deadline</strong> ，然后循环从 <strong>queue</strong> 中取出任务并执行，在循环过程中，每次都调用 <strong>shouldYield</strong> 判断当前调度是否需要停止</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> threshold: <span class="built_in">number</span> = <span class="number">5</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> flush = (): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> task, next</span><br><span class="line">  <span class="comment">// 设置调度停止时间</span></span><br><span class="line">  deadline = getTime() + threshold <span class="comment">// <span class="doctag">TODO:</span> heuristic algorithm</span></span><br><span class="line">  <span class="keyword">while</span> ((task = queue.pop()) &amp;&amp; !shouldYield()) &#123;</span><br><span class="line">      <span class="comment">// 执行任务，如果有返回值，优先对返回值进行调度</span></span><br><span class="line">    ; (next = task()) &amp;&amp; queue.push(next) &amp;&amp; schedule(next)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取时间戳</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> getTime = <span class="function">() =&gt;</span> performance.now()</span><br></pre></td></tr></table></figure>
+
+<h1 id="shouldYield"><a href="#shouldYield" class="headerlink" title="shouldYield"></a>shouldYield</h1><p>从 <strong>v16</strong> 之前，大型的 <strong>React</strong> 应用一直苦于更新的时候占用 <strong>js</strong> 线程，递归遍历大量 <strong>虚拟DOM</strong> ，导致浏览器卡顿。</p>
+<p>这个时候 <strong>异步调度</strong> 和 <strong>时间分片</strong> 就显得十分重要。前面谈到进入 <strong>flush</strong> 函数的时候，首先会设置一个 <strong>deadline</strong> ，然后每次从 <strong>queue</strong> 中取出任务的时候，通过 <strong>shouldYield</strong> 函数来判断此次调度是否应该终止。如此一来，就能让浏览器有时间去做其他事情，如动画的渲染等。</p>
+<p><strong>React</strong> 利用了 <strong>MessageChannel</strong> 里的 <strong>宏任务</strong> ，保证在下次事件循环里执行 <strong>flush</strong> 函数。看一下 <strong>shouldYield</strong> 返回 <strong>true</strong> 的情况：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> shouldYield = (): <span class="function"><span class="params">boolean</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> pending = getTime() &gt;= deadline </span><br><span class="line">  postTask = task(pending)  <span class="comment">// 如果当前调度应该停止，传入true</span></span><br><span class="line">  <span class="keyword">return</span> pending</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> task = <span class="function">(<span class="params">pending: <span class="built_in">boolean</span></span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (!pending &amp;&amp; <span class="keyword">typeof</span> <span class="built_in">Promise</span> !== <span class="string">&#x27;undefined&#x27;</span>) &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> queueMicrotask</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function">() =&gt;</span> <span class="built_in">Promise</span>.resolve().then(flush)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 当前调度应该停止，通过MessageChannel建立宏任务</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> MessageChannel !== <span class="string">&#x27;undefined&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; port1, port2 &#125; = <span class="keyword">new</span> MessageChannel()</span><br><span class="line">    port1.onmessage = flush</span><br><span class="line">    <span class="keyword">return</span> <span class="function">() =&gt;</span> port2.postMessage(<span class="literal">null</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="function">() =&gt;</span> <span class="built_in">setTimeout</span>(flush)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到当调度停止的时候，会通过 <strong>task</strong> 函数建立 <strong>MessageChannel</strong>，返回 <strong>postMessage</strong> 方法并赋值给 <strong>postTask</strong> 。</p>
+<p>而 <strong>postTask</strong> 前面提到过会在 <strong>schedule</strong> 里执行，只不过现在已经变为 <strong>宏任务</strong> 了，并不会影响到浏览器的其他工作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>schedule</strong> 模块主要负责了整个调度任务。通过 <strong>queue</strong> 这个数据结构来保存任务。<br>每次调度开启的时候，都会设置一个 <strong>deadline</strong> ，然后在任务开启时调用 <strong>shouldYield</strong> 函数判断是否过期。<br>如果当前调度应当结束，则改变 <strong>postTask</strong> 的指向，利用 <strong>MessageChannel</strong> 中的 <strong>宏任务</strong> 达到 <strong>时间分片</strong> 的效果。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/24/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAForm%E8%A1%A8%E5%8D%95%E7%BB%84%E4%BB%B6/" rel="prev" title="实现一个Form表单组件">
+      <i class="fa fa-chevron-left"></i> 实现一个Form表单组件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#preview"><span class="nav-number">1.</span> <span class="nav-text">preview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#schedule"><span class="nav-number">2.</span> <span class="nav-text">schedule</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#flush"><span class="nav-number">3.</span> <span class="nav-text">flush</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#shouldYield"><span class="nav-number">4.</span> <span class="nav-text">shouldYield</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

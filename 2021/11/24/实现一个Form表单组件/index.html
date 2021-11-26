@@ -28,7 +28,7 @@
 <meta property="og:description" content="在众多组件实现中，Form 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。 组件形态为了更好表达 H5 的语义化，同时模仿 ant design 的实现，可以有以下初步的设计：每一个表单子项使用 &lt;FormItem&gt; 标签包裹，里面可以选择不同的输入项如 &lt;Input&gt; ，&lt;CheckBox&amp;gt">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-11-24T08:47:48.000Z">
-<meta property="article:modified_time" content="2021-11-25T02:21:43.777Z">
+<meta property="article:modified_time" content="2021-11-26T01:24:36.150Z">
 <meta property="article:author" content="Ken">
 <meta property="article:tag" content="React">
 <meta name="twitter:card" content="summary">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-25 10:21:43" itemprop="dateModified" datetime="2021-11-25T10:21:43+08:00">2021-11-25</time>
+                <time title="Modified: 2021-11-26 09:24:36" itemprop="dateModified" datetime="2021-11-26T09:24:36+08:00">2021-11-26</time>
               </span>
 
           
@@ -277,7 +277,7 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 保存所有 api 方法名</span></span><br><span class="line"><span class="keyword">const</span> formInstanceApi = [</span><br><span class="line">    <span class="comment">// 需要暴露的api方法名称</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FormItem</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 2. 将类中对应的方法转移到对象中</span></span><br><span class="line">    <span class="function"><span class="title">getForm</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> formInstanceApi.reduce(<span class="function">(<span class="params">prev, current</span>) =&gt;</span> &#123;</span><br><span class="line">            prev[current] = <span class="built_in">this</span>[current].bind(<span class="built_in">this</span>);</span><br><span class="line">            <span class="keyword">return</span> prev;</span><br><span class="line">        &#125;, &#123;&#125;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. hook 钩子函数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">useForm</span>(<span class="params">form, defaultValue = &#123;&#125;</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 缓存 FormStore 对象</span></span><br><span class="line">    <span class="keyword">const</span> formRef = useRef(<span class="literal">null</span>);</span><br><span class="line">    <span class="comment">// 以便 FormStore 实例强制更新</span></span><br><span class="line">    <span class="keyword">const</span> [, forceUpdate] = useState(&#123;&#125;);</span><br><span class="line">    <span class="keyword">if</span> (form) &#123;</span><br><span class="line">        formRef.current = form;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> formStore = <span class="keyword">new</span> FormStore(forceUpdate, defaultValue);</span><br><span class="line">        <span class="comment">// 获取所有 api 方法</span></span><br><span class="line">        formRef.current = formStore.getForm();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> formRef.current;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 4. 创建 form 上下文</span></span><br><span class="line"><span class="keyword">const</span> FormContext = createContext();</span><br><span class="line"><span class="comment">// 5. 获取 FormStore 实例</span></span><br><span class="line"><span class="keyword">const</span> formInstance = useForm(form, initialValue);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> (</span><br><span class="line">    <span class="comment">// 6. 注入 formInstance</span></span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">FormContext.Provider</span> <span class="attr">value</span>=<span class="string">&#123;formInstance&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">        &#123;children&#125;</span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">FormContext.Provider</span>&gt;</span></span></span><br><span class="line">)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <hr>
-<h1 id="组件编写"><a href="#组件编写" class="headerlink" title="组件编写"></a>组件编写</h1><p>有了以上的设计，就可以开始编程了，我这里选择先编写组件，而非完成 <strong>FormStore</strong>，因为我想在构建组件的过程中，遇到困难的时候，再让 <strong>FormStore</strong> 帮助我实现，这样一来既可以往这个类里慢慢添加方法，而非在一开始就费尽心思地去思索到底需要包含哪一些方法。</p>
+<h1 id="组件编写"><a href="#组件编写" class="headerlink" title="组件编写"></a>组件编写</h1><p>有了以上的设计，就可以开始编程了，我这里选择先编写组件，而非完成 <strong>FormStore</strong>，因为我想在构建组件的过程中，遇到困难的时候，再让 <strong>FormStore</strong> 帮助我实现，这样一来可以往这个类里慢慢添加方法，而非在一开始就费尽心思地去思索到底需要包含哪一些方法。</p>
 <h2 id="Form-1"><a href="#Form-1" class="headerlink" title="Form"></a>Form</h2><h3 id="FormStore职责"><a href="#FormStore职责" class="headerlink" title="FormStore职责"></a>FormStore职责</h3><p>按照上面的 <strong>API</strong> 构思，已经非常清楚 <strong>Form</strong> 组件的 <strong>props</strong> 里面包含什么了。</p>
 <ol>
 <li><p><strong>onFinish</strong> 和 <strong>onFinishFailed</strong> 都是在提交的时候执行的回调函数。<br>所以对应 <strong>FormStore</strong> 也应该有一个 <strong>submit</strong> 方法，在这个方法里，会执行 <strong>onFinish</strong> 回调函数。<br>另外，需要对 <strong>Form</strong> 的所有子项进行校验，如果当中有一项出错，那么就需要相应地执行 <strong>onFinishFailed</strong>。</p>
@@ -476,7 +476,10 @@
     <a href="/2021/11/22/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-router/" rel="prev" title="实现一个mini-react-router">
       <i class="fa fa-chevron-left"></i> 实现一个mini-react-router
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/" rel="next" title="fre源码阅读 - schedule篇">
+      fre源码阅读 - schedule篇 <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -549,7 +552,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

@@ -150,6 +150,75 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/" class="post-title-link" itemprop="url">fre源码阅读 - schedule篇</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-11-26 09:25:21 / Modified: 10:21:52" itemprop="dateCreated datePublished" datetime="2021-11-26T09:25:21+08:00">2021-11-26</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>偶然了解到 <strong>fre</strong> 这个框架，甚至不能称他为框架，因为他太 “小” 了，作者是这样定义他的： <strong>Tiny Concurrent UI library with Fiber</strong> 。</p>
+<p>虽然代码量极小，却以相同的 <strong>fiber</strong> 思路，实现了 <strong>React</strong> 中的大量功能。对于想了解 <strong>React</strong>， 却又对庞大的源码无从下手的人来说，是一个极佳的学习资源。接下来就从不到 50 行的 <strong>schedule</strong> 模块开始分析 <strong>fre</strong> 是如何运作的。</p>
+<h1 id="schedule"><a href="#schedule" class="headerlink" title="schedule"></a>schedule</h1><p><strong>schedule</strong> 函数很简单，仅仅是把任务 <strong>push</strong> 到了队列 <strong>queue</strong> 里面，然后执行 <strong>postTask</strong> 函数。而 <strong>postTask</strong> 一开始是一个变量，他指向 <strong>task(false)</strong> ，开启了一个微任务执行 <strong>flush</strong> 函数。对源码进行一下翻译就是：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 源码</span></span><br><span class="line"><span class="keyword">let</span> postTask = task(<span class="literal">false</span>)</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; postTask()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 翻译后</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; <span class="built_in">Promise</span>.resolve().then(flush)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/24/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAForm%E8%A1%A8%E5%8D%95%E7%BB%84%E4%BB%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -181,7 +250,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-25 10:21:43" itemprop="dateModified" datetime="2021-11-25T10:21:43+08:00">2021-11-25</time>
+                <time title="Modified: 2021-11-26 09:24:36" itemprop="dateModified" datetime="2021-11-26T09:24:36+08:00">2021-11-26</time>
               </span>
 
           
@@ -582,7 +651,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
