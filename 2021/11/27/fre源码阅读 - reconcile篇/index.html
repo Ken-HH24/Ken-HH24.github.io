@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="preview上篇的 schedule 模块为 fre 构建了完整的任务调度系统。而当要真正执行更新的时候，就得从 reconcile 函数看起，因此写一个简单的应用，并触发 setState ，看一下 reconcile 模块是如何工作的。 123456789101112131415161718import &amp;#123; render, useState, h &amp;#125; from &amp;quot">
+<meta property="og:type" content="article">
+<meta property="og:title" content="fre源码阅读 - reconcile篇">
+<meta property="og:url" content="http://example.com/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="preview上篇的 schedule 模块为 fre 构建了完整的任务调度系统。而当要真正执行更新的时候，就得从 reconcile 函数看起，因此写一个简单的应用，并触发 setState ，看一下 reconcile 模块是如何工作的。 123456789101112131415161718import &amp;#123; render, useState, h &amp;#125; from &amp;quot">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-11-27T05:31:34.000Z">
+<meta property="article:modified_time" content="2021-11-27T13:49:28.212Z">
+<meta property="article:author" content="Ken">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>fre源码阅读 - reconcile篇 | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          fre源码阅读 - reconcile篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-11-27 13:31:34 / Modified: 21:49:28" itemprop="dateCreated datePublished" datetime="2021-11-27T13:31:34+08:00">2021-11-27</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>上篇的 <strong>schedule</strong> 模块为 <strong>fre</strong> 构建了完整的任务调度系统。而当要真正执行更新的时候，就得从 <strong>reconcile</strong> 函数看起，因此写一个简单的应用，并触发 <strong>setState</strong> ，看一下 <strong>reconcile</strong> 模块是如何工作的。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; render, useState, h &#125; <span class="keyword">from</span> <span class="string">&quot;../../src/index&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">App</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> [count, setCount] = useState(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> add = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    setCount(count + <span class="number">1</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;<span class="name">h1</span>&gt;</span>&#123;count&#125;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;add&#125;</span>&gt;</span>+<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">render(<span class="xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>, <span class="built_in">document</span>.getElementById(<span class="string">&quot;app&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<hr>
+<span id="more"></span>
+
+<h1 id="reconcile"><a href="#reconcile" class="headerlink" title="reconcile"></a>reconcile</h1><p><strong>reconcile</strong> 函数接收一个 <strong>Fiber</strong> ，然后会不断执行 <strong>capture</strong> 函数进行深度优先搜索更新。<br>函数终止的情况有以下两种：</p>
+<ol>
+<li>更新完毕，<strong>WIP</strong> 变量为 <strong>null</strong> ，开始进入下一个 <strong>commit</strong> 阶段</li>
+<li><strong>shouldYield()</strong> 函数返回 <strong>true</strong>，调度结束，利用 <strong>bind</strong> 函数保存当前的更新进度。</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> reconcile = (WIP?: IFiber): <span class="function"><span class="params">boolean</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// 进入深度优先搜索</span></span><br><span class="line">  <span class="keyword">while</span> (WIP &amp;&amp; !shouldYield()) WIP = capture(WIP)</span><br><span class="line">  <span class="comment">// 调度终止，保留当前更新进度</span></span><br><span class="line">  <span class="keyword">if</span> (WIP) <span class="keyword">return</span> reconcile.bind(<span class="literal">null</span>, WIP)</span><br><span class="line">  <span class="comment">// 更新完成，进入commit阶段</span></span><br><span class="line">  <span class="keyword">if</span> (finish) &#123;</span><br><span class="line">    commit(finish)</span><br><span class="line">    finish = <span class="literal">null</span></span><br><span class="line">    options.done &amp;&amp; options.done()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="capture"><a href="#capture" class="headerlink" title="capture"></a>capture</h1><p><strong>capture</strong> 函数会先判断当前的 <strong>Fiber</strong> 是否为 <strong>Functional Component</strong>，然后保存在 <strong>Fiber.isComp</strong> 中。根据判断结果分别执行 <strong>updateHook</strong> 或者 <strong>updateHost</strong><br>因为是深度优先搜索，所以会先查看是否有 <strong>child</strong>，如果有，直接返回到上一层的 <strong>reconcile</strong> 函数，继续更新。<br>否则先查看是否有同层兄弟节点 <strong>sibling</strong>，并视情况返回。如果都没有，则重新指向 <strong>parent</strong>。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> capture = (WIP: IFiber): IFiber | <span class="function"><span class="params">undefined</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">//  判断是否为函数组件, type为整个React.FC</span></span><br><span class="line">  WIP.isComp = isFn(WIP.type)</span><br><span class="line">  <span class="comment">//  按情况进行更新</span></span><br><span class="line">  WIP.isComp ? updateHook(WIP) : updateHost(WIP)</span><br><span class="line">  <span class="comment">//  深度优先搜索</span></span><br><span class="line">  <span class="keyword">if</span> (WIP.child) <span class="keyword">return</span> WIP.child</span><br><span class="line">  <span class="keyword">while</span> (WIP) &#123;</span><br><span class="line">    bubble(WIP)</span><br><span class="line">    <span class="keyword">if</span> (!finish &amp;&amp; WIP.lane &amp; LANE.DIRTY) &#123;</span><br><span class="line">      finish = WIP</span><br><span class="line">      WIP.lane &amp;= ~LANE.DIRTY</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//  查看同层兄弟节点</span></span><br><span class="line">    <span class="keyword">if</span> (WIP.sibling) <span class="keyword">return</span> WIP.sibling</span><br><span class="line">    <span class="comment">//  重新指向父节点</span></span><br><span class="line">    WIP = WIP.parent</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="updateHook"><a href="#updateHook" class="headerlink" title="updateHook"></a>updateHook</h1><p>如果当前 <strong>Fiber</strong> 是 <strong>Functional Component</strong>，那么会执行 <strong>updateHook</strong>。<br>该函数会执行以下任务：</p>
+<ol>
+<li>重置 <strong>cursor</strong> 指针，该指针在生成 <strong>Fiber.hooks</strong> 中有作用</li>
+<li>重新执行 <strong>Fiber</strong> 的函数，即 <strong>Fiber.type(Fiber.props)</strong></li>
+<li>进行 <strong>diff</strong> 算法</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> updateHook = &lt;P = Attributes&gt;(WIP: IFiber): void =&gt; &#123;</span><br><span class="line">  resetCursor()  //  重置 cursor 指针</span><br><span class="line">  currentFiber = WIP</span><br><span class="line">  let children = (WIP.type as FC&lt;P&gt;)(WIP.props)  //  重新执行 function</span><br><span class="line">  diffKids(WIP, simpleVnode(children))  //  进行 diff 算法</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="diffKids"><a href="#diffKids" class="headerlink" title="diffKids"></a>diffKids</h1><p><strong>diff</strong> 算法的流程主要如下</p>
+<ol>
+<li><p>从尾指针开始进行 <strong>diff</strong> 操作</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (aHead &lt;= aTail &amp;&amp; bHead &lt;= bTail) &#123;</span><br><span class="line">  <span class="comment">//  判断是否相同</span></span><br><span class="line">  <span class="keyword">if</span> (!same(aCh[aTail], bCh[bTail])) <span class="keyword">break</span></span><br><span class="line">  <span class="comment">//  克隆节点</span></span><br><span class="line">  clone(aCh[aTail--], bCh[bTail], LANE.UPDATE, WIP, bTail--)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>从头指针开始进行 <strong>diff</strong> 操作</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (aHead &lt;= aTail &amp;&amp; bHead &lt;= bTail) &#123;</span><br><span class="line">  <span class="keyword">if</span> (!same(aCh[aHead], bCh[bHead])) <span class="keyword">break</span></span><br><span class="line">  bCh[bHead].lane |= LANE.HEAD</span><br><span class="line">  aHead++</span><br><span class="line">  bHead++</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>如果旧节点已经遍历完，那么剩余的新节点都作 <strong>insert</strong> 操作</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (aHead &gt; aTail) &#123;</span><br><span class="line">  <span class="keyword">while</span> (bHead &lt;= bTail) &#123;</span><br><span class="line">    <span class="keyword">let</span> c = bCh[bTail]</span><br><span class="line">    <span class="comment">//  标记 insert</span></span><br><span class="line">    c.lane = LANE.INSERT</span><br><span class="line">    <span class="comment">// 连接同级的兄弟节点</span></span><br><span class="line">    linke(c, WIP, bTail--)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>如果新节点已经遍历完，那么剩余的旧节点都作 <strong>remove</strong> 操作</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (bHead &gt; bTail) &#123;</span><br><span class="line">  <span class="keyword">while</span> (aHead &lt;= aTail) &#123;</span><br><span class="line">    <span class="keyword">let</span> c = aCh[aTail--]</span><br><span class="line">    <span class="comment">//  标记 remove</span></span><br><span class="line">    c.lane = LANE.REMOVE</span><br><span class="line">    detach.d = c</span><br><span class="line">    detach = c</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><p>在剩余节点之中，按照顺序找到最多的可复用节点，然后 <strong>clone</strong> 到新节点里。下面详细说一下实现过程。</p>
+</li>
+</ol>
+<h2 id="algorithm"><a href="#algorithm" class="headerlink" title="algorithm"></a>algorithm</h2><p>首先会得出如下变量：</p>
+<ol>
+<li><strong>I对象</strong> 维护 <strong>[ newNode.key : newNode.index ]</strong> 的对应关系</li>
+<li><strong>P数组</strong> 存储 <strong>P[newNode.index] = oldNode.index</strong> 的关系</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> I = &#123;&#125;, P = []</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> i = bHead; i &lt;= bTail; i++) &#123;</span><br><span class="line">  I[bCh[i].key || <span class="string">&#x27;.&#x27;</span> + <span class="number">1</span>] = i</span><br><span class="line">  P[i] = -<span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> i = aHead; i &lt;= aTail; i++) &#123;</span><br><span class="line">  <span class="keyword">let</span> j = I[aCh[i].key || <span class="string">&#x27;.&#x27;</span> + i]</span><br><span class="line">  <span class="comment">//  找到有相同key的节点</span></span><br><span class="line">  <span class="keyword">if</span> (j != <span class="literal">null</span>) &#123;</span><br><span class="line">    P[j] = i</span><br><span class="line">  <span class="comment">//  没有找到相同key节点，标记remove</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> c = aCh[i]</span><br><span class="line">    c.lane = LANE.REMOVE</span><br><span class="line">    detach.d = c</span><br><span class="line">    detach = c</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>随后调用 <strong>findLis()</strong> 函数，传入 <strong>P数组</strong> ，查找其最长公共子序列。</p>
+<p><strong>LIS</strong> 的求解算法是经典的二分查找，思路如下：</p>
+<ol>
+<li>顺序遍历，当前的数为 <strong>x</strong></li>
+<li>通过二分查找找到 <strong>seq</strong> 数组里比 <strong>x</strong> 小，但最大的数，记录其位置 <strong>pos</strong> （seq数组升序）</li>
+<li>如果 <strong>pos+1 &gt;= seq.length</strong> 或者 <strong>seq[pos+1] &gt; x</strong> ，则 <strong>seq[pos+1] = x</strong></li>
+<li>否则继续下一次循环</li>
+</ol>
+<p><strong>findLis</strong> 函数中各个数组的作用如下：</p>
+<table>
+<thead>
+<tr>
+<th>Array</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>seq</td>
+<td>保持升序的数组，在该数组上进行插值</td>
+</tr>
+<tr>
+<td>is</td>
+<td>oldNode[seq[i]].key = newNode[is[i]].key</td>
+</tr>
+<tr>
+<td>pre</td>
+<td>LIS中，前一个数的 <strong>index</strong></td>
+</tr>
+</tbody></table>
+<p>如此一来，在找 <strong>oldNode.index</strong> 的过程中，通过 <strong>pre</strong> 函数把其映射到了 <strong>newNode</strong> 上</p>
+<p>下面再举一个例子<br>假如 <strong>newNode</strong> 和 <strong>oldNode</strong> 的 <strong>key</strong> 值为如下情况：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> oldNode = [<span class="number">2</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line"><span class="keyword">const</span> newNode = [<span class="number">1</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">4</span>];</span><br></pre></td></tr></table></figure>
+
+<p>那么建立起的 <strong>P数组</strong> 为：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> P = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">4</span>, <span class="number">3</span>];</span><br></pre></td></tr></table></figure>
+
+<p>在执行 <strong>findLis</strong> 过程中，从头开始遍历 <strong>P数组</strong>，其他数组的变化情况为：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> seq, is, pre;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  第一次</span></span><br><span class="line">seq = [<span class="number">1</span>];</span><br><span class="line">is = [<span class="number">0</span>];</span><br><span class="line">pre = [<span class="literal">undefined</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">//  第二次</span></span><br><span class="line">seq = [<span class="number">1</span>, <span class="number">2</span>];</span><br><span class="line">is = [<span class="number">0</span>, <span class="number">1</span>];</span><br><span class="line">pre = [<span class="literal">undefined</span>, <span class="number">0</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">//  第三次</span></span><br><span class="line">seq = [<span class="number">0</span>, <span class="number">2</span>];</span><br><span class="line">is = [<span class="number">2</span>, <span class="number">1</span>];</span><br><span class="line">pre = [<span class="literal">undefined</span>, <span class="number">0</span>, <span class="literal">undefined</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">//  第四次</span></span><br><span class="line">seq = [<span class="number">0</span>, <span class="number">2</span>, <span class="number">4</span>];</span><br><span class="line">is = [<span class="number">2</span>, <span class="number">1</span>, <span class="number">3</span>];</span><br><span class="line">pre = [<span class="literal">undefined</span>, <span class="number">0</span>, <span class="literal">undefined</span>, <span class="number">1</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">//  第五次</span></span><br><span class="line">seq = [<span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line">is = [<span class="number">2</span>, <span class="number">1</span>, <span class="number">4</span>];</span><br><span class="line">pre = [<span class="literal">undefined</span>, <span class="number">0</span>, <span class="literal">undefined</span>, <span class="number">1</span>, <span class="number">1</span>];</span><br></pre></td></tr></table></figure>
+
+<p>至此执行的代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  二分查找函数</span></span><br><span class="line"><span class="keyword">const</span> bs = <span class="function">(<span class="params">seq, n</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> lo = -<span class="number">1</span>,</span><br><span class="line">        hi = seq.length</span><br><span class="line">    <span class="keyword">if</span> (hi &gt; <span class="number">0</span> &amp;&amp; seq[hi - <span class="number">1</span>] &lt;= n) &#123;</span><br><span class="line">        <span class="keyword">return</span> hi - <span class="number">1</span>  <span class="comment">// seq中无元素匹配，直接在后面插入n</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (hi - lo &gt; <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">let</span> mid = (lo + hi) &gt;&gt; <span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> (seq[mid] &gt; n) &#123;</span><br><span class="line">            hi = mid</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            lo = mid</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> lo</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> seq = [],</span><br><span class="line">    is = [],</span><br><span class="line">    l = -<span class="number">1</span>,</span><br><span class="line">    pre = <span class="keyword">new</span> <span class="built_in">Array</span>(ns.length)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i = start, len = ns.length; i &lt; len; i++) &#123;</span><br><span class="line">    <span class="keyword">let</span> n = ns[i]</span><br><span class="line">    <span class="comment">//  没有key相同的节点</span></span><br><span class="line">    <span class="keyword">if</span> (n &lt; <span class="number">0</span>) <span class="keyword">continue</span></span><br><span class="line">    <span class="comment">//  二分查找</span></span><br><span class="line">    <span class="keyword">let</span> j = bs(seq, n)</span><br><span class="line">    <span class="comment">//  如果不是子串的第一个元素，需要用pre标记，此时j永远指向放置位置的前一位</span></span><br><span class="line">    <span class="keyword">if</span> (j !== -<span class="number">1</span>) pre[i] = is[j]</span><br><span class="line">    <span class="comment">//  放置到LIS的末尾</span></span><br><span class="line">    <span class="keyword">if</span> (j === l) &#123;</span><br><span class="line">        l++</span><br><span class="line">        seq[l] = n</span><br><span class="line">        is[l] = i</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (n &lt; seq[j + <span class="number">1</span>]) &#123;</span><br><span class="line">        seq[j + <span class="number">1</span>] = n</span><br><span class="line">        is[j + <span class="number">1</span>] = i</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后根据 <strong>pre</strong> 数组对最长公共子串进行重构,最后得出 <code>seq = [0, 1, 4]</code></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (i = is[l]; l &gt;= <span class="number">0</span>; i = pre[i], l--) &#123;</span><br><span class="line">    seq[l] = i</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用完 <strong>findLis</strong> 后进行收尾工作：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> lis = findLis(P, bHead),</span><br><span class="line">i = lis.length - <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (bHead &lt;= bTail) &#123;</span><br><span class="line">  <span class="keyword">let</span> c = bCh[bTail]</span><br><span class="line">  <span class="comment">//  在LIS中找到可复用节点</span></span><br><span class="line">  <span class="keyword">if</span> (bTail === lis[i]) &#123;</span><br><span class="line">    <span class="comment">//  直接通过P对象找到oldNode的index，标记update</span></span><br><span class="line">    clone(aCh[P[bTail]], c, LANE.UPDATE, WIP, bTail--)</span><br><span class="line">    i--</span><br><span class="line">    <span class="comment">//  没有可复用的节点，标记insert</span></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (P[bTail] === -<span class="number">1</span>) &#123;</span><br><span class="line">    c.lane = LANE.INSERT</span><br><span class="line">    <span class="comment">//  连接同级兄弟节点</span></span><br><span class="line">    linke(c, WIP, bTail--)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    clone(aCh[P[bTail]], c, LANE.INSERT, WIP, bTail--)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="linke"><a href="#linke" class="headerlink" title="linke"></a>linke</h1><p>在前面的源码中多次看到了 <strong>linke</strong> 这个函数，该函数的作用是在重新构建 <strong>Fiber</strong> 树的过程中，维护 <strong>Fiber</strong> 的 <strong>sibling</strong> 和 <strong>prev</strong> 变量。<br>这里的 <strong>Fiber</strong> 树有一些不一样，头结点是 **kids[kids.length -1]**，然后通过 <strong>sibling</strong> 指针一直指向尾节点 **_prev = kids[0]**。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">linke</span>(<span class="params">kid, WIP, i</span>) </span>&#123;</span><br><span class="line">  <span class="comment">//  建立parent指针</span></span><br><span class="line">  kid.parent = WIP</span><br><span class="line">  <span class="keyword">if</span> (WIP.lane &amp; LANE.SVG) &#123;</span><br><span class="line">    kid.lane |= LANE.SVG</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (WIP.isComp &amp;&amp; WIP.lane &amp; LANE.INSERT) &#123;</span><br><span class="line">    kid.lane |= LANE.INSERT</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//  是kids[kids.length-1]，标记为child，链表的头节点</span></span><br><span class="line">  <span class="keyword">if</span> (i === WIP.kids.length - <span class="number">1</span>) &#123;</span><br><span class="line">    WIP.child = kid</span><br><span class="line">  <span class="comment">//  建立sibling指针</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    WIP._prev.sibling = kid</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//  维护尾节点</span></span><br><span class="line">  WIP._prev = kid</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>reconcile</strong> 模块主要负责 <strong>Fiber</strong> 树重建工作，整体工作流程如下：</p>
+<ol>
+<li><strong>reconcile</strong> 函数不断调用 <strong>capture</strong> 函数，如果调度结束，通过 <strong>bind</strong> 函数保存当前工作进度。</li>
+<li><strong>capture</strong> 函数进行深度优先搜索，按照 <strong>Fiber</strong> 的类型执行更新。如果是 <strong>Funtional Component</strong> 会重新执行一次函数。</li>
+<li><strong>capture</strong> 搜索过程中还会将 <strong>Fiber.hooks.effect</strong> 放入调度队列中。</li>
+<li>每次 <strong>Fiber</strong> 更新执行 <strong>diffKids</strong> 函数，利用 <strong>diff</strong> 算法找到可复用的节点，其中用到了 <strong>LIS</strong> 和 <strong>二分查找</strong> 等常用算法。</li>
+<li>搜索完毕使用 <strong>finish</strong> 保存最终 <strong>Fiber</strong>，进入 <strong>commit</strong> 流程。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/26/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAModal%E5%BC%B9%E7%AA%97%E7%BB%84%E4%BB%B6/" rel="prev" title="实现一个Modal弹窗组件">
+      <i class="fa fa-chevron-left"></i> 实现一个Modal弹窗组件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#preview"><span class="nav-number">1.</span> <span class="nav-text">preview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#reconcile"><span class="nav-number">2.</span> <span class="nav-text">reconcile</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#capture"><span class="nav-number">3.</span> <span class="nav-text">capture</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#updateHook"><span class="nav-number">4.</span> <span class="nav-text">updateHook</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#diffKids"><span class="nav-number">5.</span> <span class="nav-text">diffKids</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#algorithm"><span class="nav-number">5.1.</span> <span class="nav-text">algorithm</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#linke"><span class="nav-number">6.</span> <span class="nav-text">linke</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
