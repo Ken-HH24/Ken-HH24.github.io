@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="弹窗组件的实现看起来并不困难，只需在组件内添加一个容器，一个背景蒙版，然后通过 visible 变量来控制显示即可。 但是这次实现的弹窗组件不局限于简单的功能需求，还包括以下特点：  使用 ReactDOM.createPortal 渲染到挂载的容器之外  提供两种使用方式，一种是传统的插槽模式： 123456789&lt;Modal    title&#x3D;&amp;#x27;Hello World&amp;#x27">
+<meta property="og:type" content="article">
+<meta property="og:title" content="实现一个Modal弹窗组件">
+<meta property="og:url" content="http://example.com/2021/11/26/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAModal%E5%BC%B9%E7%AA%97%E7%BB%84%E4%BB%B6/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="弹窗组件的实现看起来并不困难，只需在组件内添加一个容器，一个背景蒙版，然后通过 visible 变量来控制显示即可。 但是这次实现的弹窗组件不局限于简单的功能需求，还包括以下特点：  使用 ReactDOM.createPortal 渲染到挂载的容器之外  提供两种使用方式，一种是传统的插槽模式： 123456789&lt;Modal    title&#x3D;&amp;#x27;Hello World&amp;#x27">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-11-26T07:26:25.000Z">
+<meta property="article:modified_time" content="2021-11-27T01:58:35.442Z">
+<meta property="article:author" content="Ken">
+<meta property="article:tag" content="React">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/11/26/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAModal%E5%BC%B9%E7%AA%97%E7%BB%84%E4%BB%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>实现一个Modal弹窗组件 | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAModal%E5%BC%B9%E7%AA%97%E7%BB%84%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          实现一个Modal弹窗组件
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-11-26 15:26:25" itemprop="dateCreated datePublished" datetime="2021-11-26T15:26:25+08:00">2021-11-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-11-27 09:58:35" itemprop="dateModified" datetime="2021-11-27T09:58:35+08:00">2021-11-27</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>弹窗组件的实现看起来并不困难，只需在组件内添加一个容器，一个背景蒙版，然后通过 <strong>visible</strong> 变量来控制显示即可。</p>
+<p>但是这次实现的弹窗组件不局限于简单的功能需求，还包括以下特点：</p>
+<ol>
+<li><p>使用 <strong>ReactDOM.createPortal</strong> 渲染到挂载的容器之外</p>
+</li>
+<li><p>提供两种使用方式，一种是传统的插槽模式：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;Modal</span><br><span class="line">    title=<span class="string">&#x27;Hello World&#x27;</span></span><br><span class="line">    visible=&#123;visible&#125;</span><br><span class="line">    onClose=&#123;onClose&#125;</span><br><span class="line">&gt;</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>This is a Modal Component<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">&lt;/Modal&gt;</span><br></pre></td></tr></table></figure></li>
+<li><p>另外一种是直接调用 <strong>Modal</strong> 的 <strong>API</strong> 进行控制：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  弹窗显示</span></span><br><span class="line">Modal.show(&#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;Hello World&#x27;</span>,</span><br><span class="line">    <span class="attr">visible</span>: visible,</span><br><span class="line">    <span class="attr">onClose</span>: <span class="function">() =&gt;</span> &#123; setVisible(<span class="literal">false</span>) &#125;</span><br><span class="line">    <span class="attr">content</span>: <span class="xml"><span class="tag">&lt;<span class="name">span</span>&gt;</span>This is a Modal Component<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">Modal.unMount()  <span class="comment">//  弹窗卸载</span></span><br></pre></td></tr></table></figure></li>
+<li><p>为弹窗的显示与消失添加动画，不依赖任何库</p>
+</li>
+</ol>
+<span id="more"></span>
+<hr>
+<h1 id="Modal"><a href="#Modal" class="headerlink" title="Modal"></a>Modal</h1><h2 id="props"><a href="#props" class="headerlink" title="props"></a>props</h2><p>有了以上的组件思路，现在再来整理一下 <strong>Modal</strong> 组件都有哪一些 <strong>props</strong> ：</p>
+<table>
+<thead>
+<tr>
+<th>props</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>visible</td>
+<td>组件是否可见</td>
+</tr>
+<tr>
+<td>title</td>
+<td>弹窗header的内容</td>
+</tr>
+<tr>
+<td>footer</td>
+<td>弹窗footer的内容，可传入 <strong>React.Element</strong></td>
+</tr>
+<tr>
+<td>onClose</td>
+<td>主动触发弹窗关闭的函数</td>
+</tr>
+<tr>
+<td>onOK</td>
+<td>弹窗点击确定时触发的回调函数</td>
+</tr>
+<tr>
+<td>onCancel</td>
+<td>弹窗点击取消时触发的回调函数</td>
+</tr>
+<tr>
+<td>content</td>
+<td>弹窗正文内容，可传入 <strong>React.Element</strong></td>
+</tr>
+<tr>
+<td>closeCb</td>
+<td>弹窗关闭时触发的回调函数</td>
+</tr>
+</tbody></table>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>这里 <strong>Modal</strong> 组件主要负责弹窗的内容显示，将其划分为了 <strong>header</strong> ，<strong>content</strong> 和 <strong>footer</strong> 三块。</p>
+<p>其中 <strong>content</strong> 与 <strong>footer</strong> 部分是可定制的，优先选择用户传入的 <strong>React.Element</strong> 进行渲染，如果用户没有传入，再渲染默认内容。</p>
+<p><strong>visible</strong> 这个变量在这里没有派上任何用场，因为把管理关闭与显示的职责交给了 <strong>Dialog</strong> 组件</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> Dialog <span class="keyword">from</span> <span class="string">&#x27;./Dialog&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Modal</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">PureComponent</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="title">renderTop</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; title, onClose &#125; = <span class="built_in">this</span>.props;</span><br><span class="line">        <span class="keyword">return</span> (</span><br><span class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">&#x27;modal-top&#x27;</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">span</span> <span class="attr">className</span>=<span class="string">&#x27;modal-top-title&#x27;</span>&gt;</span>&#123;title&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">span</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                    <span class="attr">className</span>=<span class="string">&#x27;modal-top-close&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                    <span class="attr">onClose</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; onClose &amp;&amp; onClose() &#125;&#125;</span></span><br><span class="line"><span class="xml">                &gt;&#123;title&#125;<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">renderContent</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; children, content &#125; = <span class="built_in">this</span>.props;</span><br><span class="line">        <span class="keyword">if</span> (content &amp;&amp; React.isValidElement(content))</span><br><span class="line">            <span class="keyword">return</span> content;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> children ? children : <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">renderFooter</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; footer, onOK, onCancel &#125; = <span class="built_in">this</span>.props;</span><br><span class="line">        <span class="keyword">if</span> (footer &amp;&amp; React.isValidElement(footer))</span><br><span class="line">            <span class="keyword">return</span> footer;</span><br><span class="line">        <span class="keyword">return</span> (</span><br><span class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">className</span>=<span class="string">&#x27;modal-footer&#x27;</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; onOK &amp;&amp; onOK() &#125;&#125;&gt;OK<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">button</span> <span class="attr">onCancel</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; onCancel &amp;&amp; onCancel() &#125;&#125;&gt;Cancel<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; visible, width = <span class="number">500</span>, onClose, closeCb, &#125; = <span class="built_in">this</span>.props;</span><br><span class="line">        <span class="keyword">return</span> (</span><br><span class="line">            <span class="xml"><span class="tag">&lt;<span class="name">Dialog</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">visible</span>=<span class="string">&#123;visible&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">closeCb</span>=<span class="string">&#123;closeCb&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">onClose</span>=<span class="string">&#123;onClose&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">width</span>=<span class="string">&#123;width&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            &gt;</span></span></span><br><span class="line"><span class="xml">                &#123;this.renderTop()&#125;</span></span><br><span class="line"><span class="xml">                &#123;this.renderContent()&#125;</span></span><br><span class="line"><span class="xml">                &#123;this.renderFooter()&#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">Dialog</span>&gt;</span></span></span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> Modal;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="Dialog"><a href="#Dialog" class="headerlink" title="Dialog"></a>Dialog</h1><h2 id="set-up"><a href="#set-up" class="headerlink" title="set up"></a>set up</h2><p>前面已经提到 <strong>Dialog</strong> 组件是控制弹窗的显示，所以很自然地就想到直接使用 <strong>visible</strong> 来控制。然后就有了一下写法：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Dialog = <span class="function">(<span class="params">props</span>)=&gt;</span>&#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; visible, children &#125; = props;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        visible ? children : <span class="literal">null</span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样的写法似乎简洁易懂，但是有如下问题：</p>
+<ol>
+<li>受限于 <strong>Modal</strong> 组件所处的父容器环境，例如 <strong>position: absolute</strong>，<strong>overflow: hidden</strong> 等。</li>
+<li>没有给组件添加淡入淡出动画。</li>
+</ol>
+<h2 id="Portals"><a href="#Portals" class="headerlink" title="Portals"></a>Portals</h2><p><strong>React</strong> 中的 <strong>Portals</strong> 可以解决上面的第一个问题。官方有如下定义：</p>
+<blockquote>
+<p>Portals provide a first-class way to render children into a DOM node that exists outside the DOM hierarchy of the parent component.</p>
+</blockquote>
+<p>常用场景为：</p>
+<blockquote>
+<p>A typical use case for portals is when a parent component has an overflow: hidden or z-index style, but you need the child to visually “break out” of its container. For example, dialogs, hovercards, and tooltips.</p>
+</blockquote>
+<p>至于用法也很简单，第一个参数是一个 <strong>React.Element</strong>，第二个则是 <strong>Element</strong> 所处的容器，在该组件下放入 <strong>document.body</strong> 下。<br><strong>Dialog</strong> 组件的 <strong>H5</strong> 结构分为一个 <strong>container</strong> 里面包裹着显示的内容 <strong>content</strong> ，和一个背景蒙版 <strong>mask</strong>。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">ReactDom.createPortal(</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">        <span class="attr">className</span>=<span class="string">&#x27;dialog-container&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">        <span class="attr">style</span>=<span class="string">&#123;&#123;</span> <span class="attr">display:</span> <span class="attr">modelShow</span> ? &#x27;<span class="attr">block</span>&#x27; <span class="attr">:</span> &#x27;<span class="attr">none</span>&#x27; &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">    &gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">className</span>=<span class="string">&#x27;dialog-content&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">style</span>=<span class="string">&#123;&#123;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">opacity:</span> <span class="attr">modelShowAsync</span> ? <span class="attr">1</span> <span class="attr">:</span> <span class="attr">0</span>,</span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">width:</span> `$&#123;<span class="attr">width</span>&#125;<span class="attr">px</span>`</span></span></span><br><span class="line"><span class="tag"><span class="xml">            &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">        &gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">                &#123;children&#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">className</span>=<span class="string">&#x27;dialog-mask&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">style</span>=<span class="string">&#123;&#123;</span> <span class="attr">opacity:</span> <span class="attr">modelShow</span> ? <span class="attr">0.6</span> <span class="attr">:</span> <span class="attr">0</span> &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; onClose &amp;&amp; onClose() &#125;&#125;</span></span><br><span class="line"><span class="xml">        &gt;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>,</span><br><span class="line">    <span class="built_in">document</span>.body</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="animation"><a href="#animation" class="headerlink" title="animation"></a>animation</h2><p>轮到添加动画了，这里希望 <strong>visible = true</strong> 的时候背景蒙版先出现，然后再出现内容。反之消失的时候内容先淡出，然后再是背景蒙版。</p>
+<p>因为动画被分为了两段，所以可以使用 <strong>useState</strong> 定义两个变量。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> [modelShow, setModelShow] = useState(visible);</span><br><span class="line"><span class="keyword">const</span> [modelShowAsync, setModelShowAsync] = useState(visible);</span><br></pre></td></tr></table></figure>
+
+<p>然后利用赋值操作把动画拆分成两个阶段：</p>
+<ol>
+<li><strong>visible = true</strong> ，<strong>setModelShow</strong> 先执行，<strong>setModelShowAsync</strong> 放入 <strong>setTimeout</strong></li>
+<li><strong>visible = false</strong> ，<strong>setModelShowAsync</strong> 先执行，<strong>setModelShow</strong> 放入 <strong>setTimeout</strong><br>利用上述规则提炼出一个 <strong>controlShow</strong> 函数</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">controlShow</span>(<span class="params">f1, f2, visible, timeout</span>) </span>&#123;</span><br><span class="line">    f1(visible);</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        f2(visible);</span><br><span class="line">    &#125;, timeout);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后利用 <strong>useEffect</strong> 监听 <strong>visible</strong> 的变化</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> timer;</span><br><span class="line">    <span class="keyword">if</span> (visible) &#123;</span><br><span class="line">        timer = controlShow(setModelShow, setModelShowAsync, <span class="literal">true</span>, <span class="number">300</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        timer = controlShow(setModelShowAsync, setModelShow, <span class="literal">false</span>, <span class="number">500</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        timer &amp;&amp; <span class="built_in">clearTimeout</span>(timer);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, [visible]);</span><br></pre></td></tr></table></figure>
+
+<h2 id="display-none-之殇"><a href="#display-none-之殇" class="headerlink" title="display: none 之殇"></a>display: none 之殇</h2><p>然后遇到了另外一个问题，内容部分 <strong>dialog-content</strong> 动画能正常运行，但是背景蒙版却无法显示动画。<br>这是因为让 <strong>css</strong> 中 <strong>transition</strong> 失效的原因有：</p>
+<ol>
+<li>元素在 <strong>display: none</strong> 与 <strong>display: block</strong> 中切换</li>
+<li>元素在 <strong>height: 0</strong> 与 <strong>height: auto</strong> 中切换</li>
+</ol>
+<p>解决的办法有几种：</p>
+<ol>
+<li>把 <strong>display</strong> 改为 <strong>visibility</strong> 和 <strong>opacity</strong> ，然后通过 <strong>绝对定位</strong> 解决元素占用空间问题</li>
+<li>把最后的 <strong>height</strong> 高度硬编码，如 <strong>height: 500px</strong></li>
+<li>把前面所说的两个动画阶段拆分成三个，如显示的过程： <strong>容器 -&gt; 背景 -&gt; 内容</strong></li>
+</ol>
+<p>在这里使用第一种解决办法，把 <strong>conainer</strong> 的 <strong>css</strong> 改为：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span></span></span><br><span class="line"><span class="tag">    <span class="attr">className</span>=<span class="string">&#x27;dialog-container&#x27;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">style</span>=<span class="string">&#123;&#123;</span> <span class="attr">visibility:</span> <span class="attr">modelShow</span> ? &#x27;<span class="attr">visible</span>&#x27; <span class="attr">:</span> &#x27;<span class="attr">hidden</span>&#x27; &#125;&#125;</span></span><br><span class="line"><span class="tag">&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>但是会发现在 <strong>visible = true</strong> 的时候背景蒙版是有动画效果的，但是在 <strong>visible = false</strong> 的时候却失效了。</p>
+<p>这是因为 <strong>dialog-mask</strong> 的动画时间需要 <strong>0.3s</strong> ，可是当 <strong>visible</strong> 变量转为 <strong>false</strong> 的时候，整个 <strong>Dialog</strong> 组件已经不可见了，所以自然而然地看不见动画效果。</p>
+<p>解决的办法就是在 <strong>visible = false</strong> 的情况下为 <strong>dialog-container</strong> 添加一个 <strong>disappear</strong> 的 <strong>class</strong> ，这个 <strong>class</strong> 会把动画延迟 <strong>0.3s</strong>，让背景蒙版动画完成后再让 <strong>Dialog</strong> 不可见。</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.dialog-container</span><span class="selector-class">.disappear</span> &#123;</span><br><span class="line">    <span class="attribute">transition-delay</span>: <span class="number">0.3s</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> renderChildren = useMemo(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> transitionDelay = visible ? <span class="string">&#x27;appear&#x27;</span> : <span class="string">&#x27;disappear&#x27;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ReactDom.createPortal(</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">className</span>=<span class="string">&#123;</span>`<span class="attr">dialog-container</span> $&#123;<span class="attr">transitionDelay</span>&#125;`&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">style</span>=<span class="string">&#123;&#123;</span> <span class="attr">visibility:</span> <span class="attr">modelShow</span> ? &#x27;<span class="attr">visible</span>&#x27; <span class="attr">:</span> &#x27;<span class="attr">hidden</span>&#x27; &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">        &gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">className</span>=<span class="string">&#x27;dialog-content&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">style</span>=<span class="string">&#123;&#123;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                    <span class="attr">opacity:</span> <span class="attr">modelShowAsync</span> ? <span class="attr">1</span> <span class="attr">:</span> <span class="attr">0</span>,</span></span></span><br><span class="line"><span class="tag"><span class="xml">                    <span class="attr">width:</span> `$&#123;<span class="attr">width</span>&#125;<span class="attr">px</span>`</span></span></span><br><span class="line"><span class="tag"><span class="xml">                &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">            &gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">                    &#123;children&#125;</span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">className</span>=<span class="string">&#x27;dialog-mask&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">style</span>=<span class="string">&#123;&#123;</span> <span class="attr">opacity:</span> <span class="attr">modelShow</span> ? <span class="attr">0.6</span> <span class="attr">:</span> <span class="attr">0</span> &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; onClose &amp;&amp; onClose() &#125;&#125;</span></span><br><span class="line"><span class="xml">            &gt;<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span>,</span><br><span class="line">        <span class="built_in">document</span>.body</span><br><span class="line">    )</span><br><span class="line">&#125;, [modelShow, modelShowAsync]);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="Modal-静态方法"><a href="#Modal-静态方法" class="headerlink" title="Modal 静态方法"></a>Modal 静态方法</h1><p>前面提到该组件还需要实现另外一种操作方法，即使用 <strong>Api</strong> 调用。这里直接把 <strong>show</strong> 与 <strong>hidden</strong> 函数挂载到 <strong>Modal</strong> 类上。</p>
+<h2 id="Modal-show"><a href="#Modal-show" class="headerlink" title="Modal.show"></a>Modal.show</h2><h3 id="React-render"><a href="#React-render" class="headerlink" title="React.render"></a>React.render</h3><p>调用 <strong>Modal.show</strong> 的时候会直接根据传入 <strong>config</strong> 生成 <strong>Modal</strong> 组件。所以该方法与编写组件最大的不同就是不会返回任何 <strong>JSX</strong> 以供外面调用，需要在函数内主动地调用 <strong>ReactDom.render</strong>。</p>
+<p>有了以上思路，先在函数中创建一个新的 <strong>&lt;div&gt;</strong> 节点，以供后面的 <strong>Modal</strong> 组件在上面挂载。为什么要创建一个新的节点？直接使用 <strong>React.DOM.render</strong> 在 <strong>document.body</strong> 里面不行吗？心中产生这样的疑问，于是又去翻了翻 <strong>React</strong> 的官网，上面写到：</p>
+<blockquote>
+<p>If the React element was previously rendered into container, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React element.<br>ReactDOM.render() controls the contents of the container node you pass in. Any existing DOM elements inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient updates.</p>
+</blockquote>
+<p>如果 <strong>container</strong> 里面原本已经有 <strong>React element</strong> 了，那么 <strong>React</strong> 就会利用 <strong>diff</strong> 算法将 <strong>container</strong> 内的元素更新。所以为了不影响程序内其他 <strong>React element</strong> 的呈现，最好还是把 <strong>Modal</strong> 单独放在一个 <strong>container</strong> 内。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建container</span></span><br><span class="line"><span class="keyword">const</span> container = <span class="built_in">document</span>.createElement(<span class="string">&#x27;div&#x27;</span>);</span><br><span class="line"><span class="comment">// 把container放置在document.body之下</span></span><br><span class="line"><span class="built_in">document</span>.body.appendChild(container);</span><br><span class="line"><span class="comment">// 渲染</span></span><br><span class="line">ReactDom.render(<span class="xml"><span class="tag">&lt;<span class="name">ModalApp</span> /&gt;</span></span>, container);</span><br></pre></td></tr></table></figure>
+
+<h3 id="mixin"><a href="#mixin" class="headerlink" title="mixin"></a>mixin</h3><p>在这种实现中，将 <strong>Modal</strong> 隐藏是调用 <strong>Modal.hidden</strong> ，也就是内部实现的 <strong>api</strong> ，所以要把 <strong>visible</strong> 变量转为可控。</p>
+<p>创建一个 <strong>ModalApp</strong> 的新组件，通过 <strong>useState</strong> 创建一个 <strong>show</strong> 变量，并把该变量混入到 <strong>Modal</strong> 组件的 <strong>visible</strong> 。</p>
+<p>为了将 <strong>Modal.show</strong> 和 <strong>Modal.hidden</strong> 能够建立联系，操作同一个组件和容器，还需要在全局创建一个 <strong>modalElement</strong> 变量，并赋值为刚才创建的 <strong>container</strong> 。随后将 <strong>setShow</strong> 方法注入到 <strong>modalElement</strong> 变量中，这里可以用一个 <strong>Symbol</strong> 创建一个 <strong>manager</strong> 的对象，保存在 <strong>modalElement</strong> 中，具体实现如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 保存container</span></span><br><span class="line"><span class="keyword">let</span> modalElement = <span class="literal">null</span>;</span><br><span class="line"><span class="keyword">const</span> modalSymbol = <span class="built_in">Symbol</span>(<span class="string">&#x27;$$_Modal_Element&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 负责提供hidden api</span></span><br><span class="line"><span class="keyword">const</span> manager = modalElement[modalSymbol] = &#123;</span><br><span class="line">    <span class="attr">mounted</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">setShow</span>: <span class="literal">null</span>,</span><br><span class="line">    <span class="function"><span class="title">hidden</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; setShow &#125; = manager;</span><br><span class="line">        <span class="comment">// 将组件隐藏</span></span><br><span class="line">        setShow(<span class="literal">false</span>);</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">destroy</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        ReactDom.unmountComponentAtNode(container);</span><br><span class="line">        <span class="built_in">document</span>.body.removeChild(container);</span><br><span class="line">        modalElement = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ModalApp = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> [show, setShow] = useState(<span class="literal">false</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//  注入到manager，方便hidden的时候调用</span></span><br><span class="line">    manager.setShow = setShow;</span><br><span class="line"></span><br><span class="line">    useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="comment">// 标记组件已挂载</span></span><br><span class="line">        manager.mounted = <span class="literal">true</span>;</span><br><span class="line">        setShow(<span class="literal">true</span>);</span><br><span class="line">    &#125;, []);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> newProps = &#123;</span><br><span class="line">        ...config,</span><br><span class="line">        <span class="attr">visible</span>: show,</span><br><span class="line">        <span class="attr">onClose</span>: <span class="function">() =&gt;</span> &#123; setShow(<span class="literal">false</span>) &#125;,</span><br><span class="line">        <span class="attr">closeCb</span>: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">            config.closeCb &amp;&amp; config.closeCb();</span><br><span class="line">            <span class="comment">// 销毁container</span></span><br><span class="line">            manager.mounted &amp;&amp; <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">                manager.destroy();</span><br><span class="line">            &#125;, <span class="number">300</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">Modal</span> &#123;<span class="attr">...newProps</span>&#125; /&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Modal-hidden"><a href="#Modal-hidden" class="headerlink" title="Modal.hidden"></a>Modal.hidden</h2><p>有了上面的 <strong>modalElement</strong> 以及保存在 <strong>modalElement[modalSymbol]</strong> 里的 <strong>manager</strong> 对象，实现 <strong>hidden</strong> 这个 <strong>api</strong> 就很简单了。只要检测一下容器还是否存在，然后调用 <strong>manager.hidden()</strong> 即可。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Modal.hidden = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    modalElement &amp;&amp; modalElement[modalSymbol].hidden();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是此时只是将 <strong>Modal</strong> 组件隐藏了，之前创建的 <strong>container</strong> 还没有完全被销毁。<br>这个时候 <strong>manager.destroy</strong> 方法就起作用了，前面的代码把该方法注入到了 <strong>closeCb</strong> 中，他会在 <strong>Modal</strong> 组件隐藏后执行，这个时候会执行 <strong>ReactDom.unmountComponentAtNode</strong> 和 <strong>document.removeChild</strong>， 将 <strong>container</strong> 卸载，最后再把 <strong>modalElement</strong> 置空。<br>最后，还要注意为了保证淡出动画的完整性，用 <strong>setTimeout</strong> 把卸载过程延迟了 <strong>0.3s</strong>。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> manager = modalElement[modalSymbol] = &#123;</span><br><span class="line">    <span class="attr">mounted</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">setShow</span>: <span class="literal">null</span>,</span><br><span class="line">    <span class="function"><span class="title">hidden</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; setShow &#125; = manager;</span><br><span class="line">        <span class="comment">// 将组件隐藏</span></span><br><span class="line">        setShow(<span class="literal">false</span>);</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">destroy</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        ReactDom.unmountComponentAtNode(container);</span><br><span class="line">        <span class="built_in">document</span>.body.removeChild(container);</span><br><span class="line">        modalElement = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> newProps = &#123;</span><br><span class="line">    ...config,</span><br><span class="line">    <span class="attr">visible</span>: show,</span><br><span class="line">    <span class="attr">onClose</span>: <span class="function">() =&gt;</span> &#123; setShow(<span class="literal">false</span>) &#125;,</span><br><span class="line">    <span class="attr">closeCb</span>: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        config.closeCb &amp;&amp; config.closeCb();</span><br><span class="line">        <span class="comment">// 销毁container</span></span><br><span class="line">        manager.mounted &amp;&amp; <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">            manager.destroy();</span><br><span class="line">        &#125;, <span class="number">300</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过上述 <strong>Modal</strong> 弹窗组件的实现，主要有以下收获：</p>
+<ol>
+<li>理解了 <strong>React</strong> 中 <strong>Portals</strong> 和 <strong>render()</strong> 的概念及作用。</li>
+<li>掌握了解决 <strong>css</strong> 动画失效的几种方法。</li>
+<li>在实现组件的过程中，学会把职责拆分为 <strong>内容展示</strong> 与 <strong>显示控制</strong>。</li>
+<li>实践了提供另外一种 <strong>API</strong> 调用方式，挂载静态函数在组件上。</li>
+<li>在多个函数中建立联系，可以创建一个中间变量来处理</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/React/" rel="tag"># React</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/" rel="prev" title="fre源码阅读 - schedule篇">
+      <i class="fa fa-chevron-left"></i> fre源码阅读 - schedule篇
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Modal"><span class="nav-number">1.</span> <span class="nav-text">Modal</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#props"><span class="nav-number">1.1.</span> <span class="nav-text">props</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.</span> <span class="nav-text">实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dialog"><span class="nav-number">2.</span> <span class="nav-text">Dialog</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#set-up"><span class="nav-number">2.1.</span> <span class="nav-text">set up</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Portals"><span class="nav-number">2.2.</span> <span class="nav-text">Portals</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#animation"><span class="nav-number">2.3.</span> <span class="nav-text">animation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#display-none-%E4%B9%8B%E6%AE%87"><span class="nav-number">2.4.</span> <span class="nav-text">display: none 之殇</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Modal-%E9%9D%99%E6%80%81%E6%96%B9%E6%B3%95"><span class="nav-number">3.</span> <span class="nav-text">Modal 静态方法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Modal-show"><span class="nav-number">3.1.</span> <span class="nav-text">Modal.show</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#React-render"><span class="nav-number">3.1.1.</span> <span class="nav-text">React.render</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mixin"><span class="nav-number">3.1.2.</span> <span class="nav-text">mixin</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Modal-hidden"><span class="nav-number">3.2.</span> <span class="nav-text">Modal.hidden</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
