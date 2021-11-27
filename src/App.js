@@ -1,12 +1,10 @@
 import React from 'react';
-import FormDemo from './Form/demo';
-import RouterDemo from './MiniRouter/demo';
+import DialogDemo from './Dialog/demo';
 
 function App() {
   return (
     <div className="App">
-      {/* <RouterDemo /> */}
-      <FormDemo />
+      <DialogDemo />
     </div>
   );
 }

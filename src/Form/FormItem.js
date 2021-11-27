@@ -3,12 +3,11 @@ import FormContext from './store/FormContext';
 import Message from './Message';
 import Label from './Label';
 
-
 const FormItem = ({
     name,
     label,
     rules = {},
-    required = 'false',
+    required = false,
     triggerChange = 'onChange',
     triggerValidate = 'onChange',
     children

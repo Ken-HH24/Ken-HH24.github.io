@@ -2,6 +2,11 @@ import React from 'react';
 
 const Message = (props) => {
     const { value, message, status, required, name } = props;
+
+    if (!required && !message) {
+        return null;
+    }
+
     let showMessage = '';
     let color = '#fff'
     if (required && value === '') {

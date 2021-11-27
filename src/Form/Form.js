@@ -19,7 +19,7 @@ const Form = (props, ref) => {
         onFinishFailed
     });
 
-    // useImperativeHandle(ref, () => providerFormInstance, []);
+    useImperativeHandle(ref, () => providerFormInstance, []);
 
     return (
         <form
