@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Preview秋招面试大厂的时候遇到一道常见的面试题：前端图片懒加载如何实现？我的回答是：“监听浏览器的scroll事件，通过目标元素的 offsetTop ，浏览器的 scrollTop 和 clientHeight 来判断当前图片是否在用户的可视范围区域内，然后进行加载。”这个时候面试官说：“还有没有其他方法呢？”我已经回答不上来了，最后面试官说：“浏览器里面已经有 api 实现了这个功能，你">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IntersectionObserver实践">
+<meta property="og:url" content="http://example.com/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="Preview秋招面试大厂的时候遇到一道常见的面试题：前端图片懒加载如何实现？我的回答是：“监听浏览器的scroll事件，通过目标元素的 offsetTop ，浏览器的 scrollTop 和 clientHeight 来判断当前图片是否在用户的可视范围区域内，然后进行加载。”这个时候面试官说：“还有没有其他方法呢？”我已经回答不上来了，最后面试官说：“浏览器里面已经有 api 实现了这个功能，你">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-11-29T08:28:45.000Z">
+<meta property="article:modified_time" content="2021-11-30T01:54:39.572Z">
+<meta property="article:author" content="Ken">
+<meta property="article:tag" content="React">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>IntersectionObserver实践 | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          IntersectionObserver实践
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-11-29 16:28:45" itemprop="dateCreated datePublished" datetime="2021-11-29T16:28:45+08:00">2021-11-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-11-30 09:54:39" itemprop="dateModified" datetime="2021-11-30T09:54:39+08:00">2021-11-30</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Preview"><a href="#Preview" class="headerlink" title="Preview"></a>Preview</h1><p>秋招面试大厂的时候遇到一道常见的面试题：前端图片懒加载如何实现？<br>我的回答是：“监听浏览器的scroll事件，通过目标元素的 <strong>offsetTop</strong> ，浏览器的 <strong>scrollTop</strong> 和 <strong>clientHeight</strong> 来判断当前图片是否在用户的可视范围区域内，然后进行加载。”<br>这个时候面试官说：“还有没有其他方法呢？”<br>我已经回答不上来了，最后面试官说：“浏览器里面已经有 <strong>api</strong> 实现了这个功能，你后面可以了解一下。”</p>
+<hr>
+<h1 id="IntersectionObserver"><a href="#IntersectionObserver" class="headerlink" title="IntersectionObserver"></a>IntersectionObserver</h1><p>面试官说到的 <strong>api</strong> 其实就是 <strong>IntersectionObserver</strong> 。它能够帮助我们监听目标元素，是否与另外一个元素相交，然后执行对应的回调函数。该类的构造函数形式如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> observer = IntersectionObserver(callback, options)</span><br></pre></td></tr></table></figure>
+
+<h2 id="callback"><a href="#callback" class="headerlink" title="callback"></a>callback</h2><p>第一个参数为一个回调函数，在 <strong>目标元素</strong> 与 <strong>根元素</strong> 相交时，会执行该函数，其定义如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> IntersectionObserverCallback &#123;</span><br><span class="line">    (entries: IntersectionObserverEntry[], <span class="attr">observer</span>: IntersectionObserver): <span class="built_in">void</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> IntersectionObserverEntry &#123;</span><br><span class="line">    <span class="keyword">readonly</span> boundingClientRect: DOMRectReadOnly;</span><br><span class="line">    <span class="keyword">readonly</span> intersectionRatio: <span class="built_in">number</span>;</span><br><span class="line">    <span class="keyword">readonly</span> intersectionRect: DOMRectReadOnly;</span><br><span class="line">    <span class="keyword">readonly</span> isIntersecting: <span class="built_in">boolean</span>;</span><br><span class="line">    <span class="keyword">readonly</span> rootBounds: DOMRectReadOnly | <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">readonly</span> target: Element;</span><br><span class="line">    <span class="keyword">readonly</span> time: DOMHighResTimeStamp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p><strong>observer</strong> 为调用构造函数时返回的值<br><strong>IntersectionObserverEntry</strong> 成员的定义为：</p>
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>boundingClientRect</td>
+<td>目标元素 <strong>getBoundingClientRect()</strong> 返回值</td>
+</tr>
+<tr>
+<td>intersectionRatio</td>
+<td>目标元素可见比例，范围0-1</td>
+</tr>
+<tr>
+<td>intersectionRect</td>
+<td>相交范围 <strong>getBoundingClientRect()</strong> 返回值</td>
+</tr>
+<tr>
+<td>isIntersecting</td>
+<td>是否相交</td>
+</tr>
+<tr>
+<td>rootBounds</td>
+<td>根元素 <strong>getBoundingClientRect()</strong> 返回值</td>
+</tr>
+<tr>
+<td>target</td>
+<td>被观察目标元素</td>
+</tr>
+<tr>
+<td>time</td>
+<td>从建立监听到相交时间</td>
+</tr>
+</tbody></table>
+<h2 id="options"><a href="#options" class="headerlink" title="options"></a>options</h2><p><strong>options</strong> 的作用为让监听过程可配置，定义如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> IntersectionObserverInit &#123;</span><br><span class="line">    root?: Element | Document | <span class="literal">null</span>;</span><br><span class="line">    rootMargin?: <span class="built_in">string</span>;</span><br><span class="line">    threshold?: <span class="built_in">number</span> | <span class="built_in">number</span>[];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>root</td>
+<td>目标元素的根元素，默认为用户可视范围 <strong>document</strong></td>
+</tr>
+<tr>
+<td>rootMargin</td>
+<td>为根元素添加 <strong>margin</strong></td>
+</tr>
+<tr>
+<td>threshold</td>
+<td>触发回调函数的阈值，范围0-1，默认0</td>
+</tr>
+</tbody></table>
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><p>有了以上对各个参数的解释，<strong>IntersectionObserver</strong> 的基本使用如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> callback = <span class="function">(<span class="params">entries, observer</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">//  目标元素可见</span></span><br><span class="line">    <span class="keyword">if</span>(entries[<span class="number">0</span>].isIntersecting) &#123;</span><br><span class="line">        <span class="comment">//  do something</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;  <span class="comment">//  目标元素不可见</span></span><br><span class="line">        <span class="comment">//  do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  目标元素</span></span><br><span class="line"><span class="keyword">const</span> targetRef = useRef(<span class="literal">null</span>);</span><br><span class="line"><span class="comment">//  root元素</span></span><br><span class="line"><span class="keyword">const</span> rootRef = useRef(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> observer = <span class="keyword">new</span> IntersectionObserver(callback, &#123;</span><br><span class="line">    <span class="attr">root</span>: rootRef.current</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">//  开始监听</span></span><br><span class="line">observer.observe(targetRef.current);</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="useIntersectionObserver"><a href="#useIntersectionObserver" class="headerlink" title="useIntersectionObserver"></a>useIntersectionObserver</h1><p>有了以上的基本使用方法，我们可以很容易地把这段逻辑抽取出来，写成一个 <strong>hook</strong> ，具体的思路如下：</p>
+<ol>
+<li><strong>useIntersectionObserver</strong> 接收三个参数，分别为目标监听元素，回调函数和配置项</li>
+<li>由于不知道目标监听元素的类型，所以添加泛型来处理</li>
+<li>把创建 <strong>IntersectionObserver</strong> 的过程用 <strong>useEffect</strong> 包装起来，并在每次卸载的时候调用 <strong>unObserve()</strong></li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; useEffect &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> useIntersectionObserver = &lt;T extends Element&gt;(</span><br><span class="line">    ref: React.RefObject&lt;T&gt;,</span><br><span class="line">    callback: IntersectionObserverCallback,</span><br><span class="line">    options?: IntersectionObserverInit</span><br><span class="line">) =&gt; &#123;</span><br><span class="line">    useEffect(() =&gt; &#123;</span><br><span class="line">        const observer = new IntersectionObserver(callback, options);</span><br><span class="line">        if (ref.current)</span><br><span class="line">            observer.observe(ref.current);</span><br><span class="line"></span><br><span class="line">        return () =&gt; &#123;</span><br><span class="line">            if (ref.current) &#123;</span><br><span class="line">                observer.unobserve(ref.current);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, [ref, options, callback])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export default useIntersectionObserver</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="ImageLoader"><a href="#ImageLoader" class="headerlink" title="ImageLoader"></a>ImageLoader</h1><p>有了上面可以动态监听元素是否可见的 <strong>hook</strong> ，可以利用它来打造一个具有图片懒加载功能的 <strong>Component</strong> 。</p>
+<ol>
+<li>把组件状态分为 <strong>visible</strong> 和 <strong>loaded</strong> 两种状态。</li>
+<li>利用 <strong>useIntersectionObserver</strong> 对 <strong>&lt;img&gt;</strong> 标签作可见监听。</li>
+<li>在用户可见时执行回调函数，设置 <strong>visible</strong> 为 <strong>true</strong> ，同时对图片 <strong>url</strong> 发送请求。</li>
+<li>图片加载完会触发 <strong>onLoad</strong> 事件，此时设置 <strong>loaded</strong> 为 <strong>true</strong> ， 展示真正的图片。</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; useState, useCallback, useRef &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> useIntersectionObserver <span class="keyword">from</span> <span class="string">&#x27;../../hooks/useIntersectionObserver&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">interface</span> ImageLoaderProps &#123;</span><br><span class="line">    <span class="attr">width</span>: <span class="built_in">number</span></span><br><span class="line">    <span class="attr">height</span>: <span class="built_in">number</span></span><br><span class="line">    <span class="attr">imageUrl</span>: <span class="built_in">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> ImageLoader: React.FC&lt;ImageLoaderProps&gt; = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; width, height, imageUrl, ...restProps &#125; = props;</span><br><span class="line">    <span class="keyword">const</span> [visible, setVisible] = useState(<span class="literal">false</span>);</span><br><span class="line">    <span class="keyword">const</span> [loaded, setLoaded] = useState(<span class="literal">false</span>);</span><br><span class="line">    <span class="keyword">const</span> imageLoaderRef = useRef(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> callback: IntersectionObserverCallback = useCallback(<span class="function">(<span class="params">entries: IntersectionObserverEntry[]</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (entries[<span class="number">0</span>].intersectionRatio &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            setVisible(<span class="literal">true</span>);</span><br><span class="line">            <span class="keyword">const</span> img = <span class="keyword">new</span> Image();</span><br><span class="line">            <span class="comment">//  发送请求</span></span><br><span class="line">            img.src = imageUrl;</span><br><span class="line">            <span class="comment">//  图片加载后展示图片</span></span><br><span class="line">            img.onload = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">                setLoaded(<span class="literal">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, [imageUrl]);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  对&lt;img&gt;标签进行监听</span></span><br><span class="line">    useIntersectionObserver(imageLoaderRef, callback);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">ref</span>=<span class="string">&#123;imageLoaderRef&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">style</span>=<span class="string">&#123;&#123;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">width:</span> `$&#123;<span class="attr">width</span>&#125;<span class="attr">px</span>`,</span></span></span><br><span class="line"><span class="tag"><span class="xml">                <span class="attr">height:</span> `$&#123;<span class="attr">height</span>&#125;<span class="attr">px</span>`</span></span></span><br><span class="line"><span class="tag"><span class="xml">            &#125;&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">        &gt;</span></span></span><br><span class="line"><span class="xml">            &#123;</span></span><br><span class="line"><span class="xml">                visible &amp;&amp; loaded &amp;&amp; <span class="tag">&lt;<span class="name">img</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                    <span class="attr">alt</span>=<span class="string">&#x27;img&#x27;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                    <span class="attr">src</span>=<span class="string">&#123;imageUrl&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">                    &#123;<span class="attr">...restProps</span>&#125;</span></span></span><br><span class="line"><span class="tag"><span class="xml">                /&gt;</span></span></span><br><span class="line"><span class="xml">            &#125;</span></span><br><span class="line"><span class="xml">            &#123;</span></span><br><span class="line"><span class="xml">                visible &amp;&amp; !loaded &amp;&amp; <span class="tag">&lt;<span class="name">span</span>&gt;</span>loading<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line"><span class="xml">            &#125;</span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> ImageLoader;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="useActive"><a href="#useActive" class="headerlink" title="useActive"></a>useActive</h1><p>之前阅读过一篇有关阿里 <strong>BI</strong> 平台的文章，前端要呈现各种图表，布局方案有多种，在组件初始加载，数据未获取的情况下选择了全量渲染方案。<br>但是由于用户的每一次选择都可能导致呈现的图表不一样，图表组件加载百万级的数据稀松平常，这个时候就需要利用 <strong>判断DOM是否在画布中</strong> 这个技术来执行 <strong>按需渲染</strong></p>
+<p><strong>按需渲染</strong> 的实现最终还是归为 <strong>IntersectionObserver</strong> ，与前面的 <strong>hook</strong> 不同，这次的 <strong>useActive</strong> 会返回一个 <strong>active</strong> 值，然后将该值交由组件处理并决定是否重新渲染。其实差别就在于回调函数的处理上：</p>
+<ol>
+<li><strong>hook</strong> 内部生成回调函数，根据元素是否可见决定 <strong>active</strong> 的值。</li>
+<li>当 <strong>active = false</strong> ，外部组件会抑制渲染，但是此时数据可能会发生变化，当切换为 <strong>true</strong> 时，可能会造成数据视图不一致的结果。因此需要利用一个 <strong>forceUpdate</strong> 在切换为 <strong>true</strong> 的时候进行强制更新。</li>
+</ol>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; useState, useEffect, useCallback &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> useActive = &lt;T extends Element, P extends Element&gt;(ref: React.RefObject&lt;T&gt;, rootRef?: React.RefObject&lt;P&gt;) =&gt; &#123;</span><br><span class="line">    const [active, setActive] = useState(false);</span><br><span class="line">    const [, forceUpdate] = useState(&#123;&#125;);</span><br><span class="line"></span><br><span class="line">    const callback: IntersectionObserverCallback = useCallback(function (entries: IntersectionObserverEntry[]) &#123;</span><br><span class="line">        if (entries[0].intersectionRatio &gt; 0) &#123;</span><br><span class="line">            setActive(true);</span><br><span class="line">            //  用户可见，强制渲染</span><br><span class="line">            forceUpdate(&#123;&#125;);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            setActive(false);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, [])</span><br><span class="line"></span><br><span class="line">    useEffect(() =&gt; &#123;</span><br><span class="line">        if (ref.current) &#123;</span><br><span class="line">            let observer: IntersectionObserver;</span><br><span class="line">            if (rootRef) &#123;</span><br><span class="line">                observer = new IntersectionObserver(callback, &#123;</span><br><span class="line">                    root: rootRef.current</span><br><span class="line">                &#125;)</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                observer = new IntersectionObserver(callback);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            observer.observe(ref.current);</span><br><span class="line"></span><br><span class="line">            return () =&gt; &#123;</span><br><span class="line">                observer.disconnect();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, [ref, rootRef])</span><br><span class="line"></span><br><span class="line">    return active;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export default useActive;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="ComponentController"><a href="#ComponentController" class="headerlink" title="ComponentController"></a>ComponentController</h1><h2 id="RenderWhenActive"><a href="#RenderWhenActive" class="headerlink" title="RenderWhenActive"></a>RenderWhenActive</h2><p>前面提到组件利用 <strong>active</strong> 值来决定是否重新渲染，如果要实现此效果，就需要借助 <strong>Class Component</strong> 的 <strong>shouldComponentUpdate</strong> ，形态如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">interface</span> IRWAProps &#123;</span><br><span class="line">    <span class="attr">active</span>: <span class="built_in">boolean</span></span><br><span class="line">    forwardedRef?: React.ForwardedRef&lt;HTMLDivElement&gt;</span><br><span class="line">    children?: ReactNode</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RenderWhenActive</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span>&lt;<span class="title">IRWAProps</span>&gt; </span>&#123;</span><br><span class="line">    <span class="comment">//  根据active决定是否更新</span></span><br><span class="line">    <span class="function"><span class="title">shouldComponentUpdate</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.props.active;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; forwardedRef, children &#125; = <span class="built_in">this</span>.props;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (</span><br><span class="line">            <span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">ref</span>=<span class="string">&#123;forwardedRef&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">                &#123;children&#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">        )</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="HOC"><a href="#HOC" class="headerlink" title="HOC"></a>HOC</h2><p>此时 <strong>useActive</strong> 还没有派上用场，这里使用 <strong>HOC</strong> 的方式来注入 <strong>active</strong> 值，而非把 <strong>useActive</strong> 暴露出去。<br>另外需要利用 <strong>ref转发</strong> 来获取 <strong>RenderWhenActive</strong> 的 <strong>DOM</strong> 。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> ComponentController: React.FC = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; children &#125; = props;</span><br><span class="line">    <span class="comment">//  目标元素DOM</span></span><br><span class="line">    <span class="keyword">const</span> compRef = useRef(<span class="literal">null</span>);</span><br><span class="line">    <span class="comment">//  active注入</span></span><br><span class="line">    <span class="keyword">const</span> active = useActive(compRef);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">RenderWhenActive</span> &#123;<span class="attr">...props</span>&#125; <span class="attr">active</span>=<span class="string">&#123;active&#125;</span> <span class="attr">forwardedRef</span>=<span class="string">&#123;compRef&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">            &#123;children&#125;</span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">RenderWhenActive</span>&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本次主要是利用 <strong>IntersectionObserver</strong> 这个 <strong>API</strong> 实现了两个 <strong>hook</strong> ，以及一个图片懒加载组件以及一个按需渲染组件，有以下收获：</p>
+<ol>
+<li>掌握了 <strong>IntersectionObserver</strong> 的基本使用。</li>
+<li>通过 <strong>onLoad</strong> 事件解决图片缓慢加载时的割裂感。</li>
+<li>通过 <strong>HOC</strong> 和 <strong>Class Component</strong> 的方式来限制组件的渲染。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/React/" rel="tag"># React</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/" rel="prev" title="fre源码阅读 - reconcile篇">
+      <i class="fa fa-chevron-left"></i> fre源码阅读 - reconcile篇
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Preview"><span class="nav-number">1.</span> <span class="nav-text">Preview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IntersectionObserver"><span class="nav-number">2.</span> <span class="nav-text">IntersectionObserver</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#callback"><span class="nav-number">2.1.</span> <span class="nav-text">callback</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#options"><span class="nav-number">2.2.</span> <span class="nav-text">options</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="nav-number">2.3.</span> <span class="nav-text">基本使用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#useIntersectionObserver"><span class="nav-number">3.</span> <span class="nav-text">useIntersectionObserver</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ImageLoader"><span class="nav-number">4.</span> <span class="nav-text">ImageLoader</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#useActive"><span class="nav-number">5.</span> <span class="nav-text">useActive</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ComponentController"><span class="nav-number">6.</span> <span class="nav-text">ComponentController</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#RenderWhenActive"><span class="nav-number">6.1.</span> <span class="nav-text">RenderWhenActive</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HOC"><span class="nav-number">6.2.</span> <span class="nav-text">HOC</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

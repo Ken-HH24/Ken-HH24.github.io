@@ -150,6 +150,84 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/" class="post-title-link" itemprop="url">IntersectionObserver实践</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-11-29 16:28:45" itemprop="dateCreated datePublished" datetime="2021-11-29T16:28:45+08:00">2021-11-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-11-30 09:54:39" itemprop="dateModified" datetime="2021-11-30T09:54:39+08:00">2021-11-30</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Preview"><a href="#Preview" class="headerlink" title="Preview"></a>Preview</h1><p>秋招面试大厂的时候遇到一道常见的面试题：前端图片懒加载如何实现？<br>我的回答是：“监听浏览器的scroll事件，通过目标元素的 <strong>offsetTop</strong> ，浏览器的 <strong>scrollTop</strong> 和 <strong>clientHeight</strong> 来判断当前图片是否在用户的可视范围区域内，然后进行加载。”<br>这个时候面试官说：“还有没有其他方法呢？”<br>我已经回答不上来了，最后面试官说：“浏览器里面已经有 <strong>api</strong> 实现了这个功能，你后面可以了解一下。”</p>
+<hr>
+<h1 id="IntersectionObserver"><a href="#IntersectionObserver" class="headerlink" title="IntersectionObserver"></a>IntersectionObserver</h1><p>面试官说到的 <strong>api</strong> 其实就是 <strong>IntersectionObserver</strong> 。它能够帮助我们监听目标元素，是否与另外一个元素相交，然后执行对应的回调函数。该类的构造函数形式如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> observer = IntersectionObserver(callback, options)</span><br></pre></td></tr></table></figure>
+
+<h2 id="callback"><a href="#callback" class="headerlink" title="callback"></a>callback</h2><p>第一个参数为一个回调函数，在 <strong>目标元素</strong> 与 <strong>根元素</strong> 相交时，会执行该函数，其定义如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> IntersectionObserverCallback &#123;</span><br><span class="line">    (entries: IntersectionObserverEntry[], <span class="attr">observer</span>: IntersectionObserver): <span class="built_in">void</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> IntersectionObserverEntry &#123;</span><br><span class="line">    <span class="keyword">readonly</span> boundingClientRect: DOMRectReadOnly;</span><br><span class="line">    <span class="keyword">readonly</span> intersectionRatio: <span class="built_in">number</span>;</span><br><span class="line">    <span class="keyword">readonly</span> intersectionRect: DOMRectReadOnly;</span><br><span class="line">    <span class="keyword">readonly</span> isIntersecting: <span class="built_in">boolean</span>;</span><br><span class="line">    <span class="keyword">readonly</span> rootBounds: DOMRectReadOnly | <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">readonly</span> target: Element;</span><br><span class="line">    <span class="keyword">readonly</span> time: DOMHighResTimeStamp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -816,7 +894,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
