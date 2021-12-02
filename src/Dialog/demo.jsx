@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Modal from './Modal';
 import './Dialog.css';
 
-const DialogDemo = () => {
+const DialogDemo = (props) => {
     const [visible, setVisible] = useState(false);
 
     const handleClose = () => {
