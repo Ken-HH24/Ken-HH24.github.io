@@ -150,6 +150,80 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/02/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-redux/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/12/02/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-redux/" class="post-title-link" itemprop="url">实现一个mini-redux</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-12-02 10:08:10 / Modified: 15:08:01" itemprop="dateCreated datePublished" datetime="2021-12-02T10:08:10+08:00">2021-12-02</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>redux</strong> 是著名的 <strong>JavaScript</strong> 状态管理库，翻看 <strong>github</strong> 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。</p>
+<hr>
+<h1 id="createStore"><a href="#createStore" class="headerlink" title="createStore"></a>createStore</h1><h2 id="dispatch"><a href="#dispatch" class="headerlink" title="dispatch"></a>dispatch</h2><p>既然是负责状态管理，那么 <strong>redux</strong> 就应该有一个 <strong>store</strong> 来存储数据。<strong>store</strong> 里面的数据不可直接改变，而是委托一个 <strong>dispatch</strong> 函数来完成，通过派发 <strong>action</strong> ，交由 <strong>reducer</strong> 来产生新的状态 <strong>state</strong> 。</p>
+<p>因此 <strong>createStore</strong> 函数的参数包括：</p>
+<ol>
+<li><strong>reducer</strong> - 接收 <strong>action</strong> ，处理修改 <strong>state</strong> 的逻辑</li>
+<li><strong>initialState</strong> - <strong>state</strong> 的初始值</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">createStore</span>(<span class="params">reducer, initialState</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> currentReducer = reducer;</span><br><span class="line">    <span class="keyword">let</span> currentState = initialState;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  返回当前state</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">getState</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> currentState;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  派发action，修改state</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">dispatch</span>(<span class="params">action</span>) </span>&#123;</span><br><span class="line">        currentState = currentReducer(currentState, action);</span><br><span class="line">        <span class="keyword">return</span> currentState;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        dispatch,</span><br><span class="line">        getState,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/12/02/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-redux/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -567,7 +641,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-24 21:23:24" itemprop="dateModified" datetime="2021-11-24T21:23:24+08:00">2021-11-24</time>
+                <time title="Modified: 2021-12-02 11:08:07" itemprop="dateModified" datetime="2021-12-02T11:08:07+08:00">2021-12-02</time>
               </span>
 
           
@@ -894,7 +968,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
