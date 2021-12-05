@@ -1,10 +1,10 @@
 import React from 'react';
-import DialogDemo from './Dialog/demo';
+import ReactReduxDemo from './react-redux/demo';
 
 function App() {
   return (
     <div className="App">
-      <DialogDemo />
+      <ReactReduxDemo />
     </div>
   );
 }
