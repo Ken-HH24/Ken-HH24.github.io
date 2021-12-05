@@ -150,6 +150,93 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/04/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-redux/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/12/04/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-redux/" class="post-title-link" itemprop="url">实现一个mini-react-redux</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-12-04 15:41:39" itemprop="dateCreated datePublished" datetime="2021-12-04T15:41:39+08:00">2021-12-04</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-05 16:58:20" itemprop="dateModified" datetime="2021-12-05T16:58:20+08:00">2021-12-05</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>上一篇完成了阅读 <strong>redux</strong> 源码并动手实现了一个 <strong>mini-redux</strong> 。<strong>redux</strong> 是一个面对 <strong>JS</strong> 的状态管理库，当投入到 <strong>React</strong> 里使用中时，如果仅从 <strong>subscribe</strong> 函数上进行展开使用，会变得十分麻烦。</p>
+<p><strong>react-redux</strong> 的出现使得在 <strong>React</strong> 能够更好地使用 <strong>redux</strong> ，通过 <strong>Provider</strong> 组件将整个 <strong>store</strong> 注入，然后当子组件需要使用到 <strong>store</strong> 里的数据时，通过 <strong>connect</strong> 函数，编写 <strong>mapStateToProps</strong> 和 <strong>mapDispatchToProps</strong> ，就可以将目标 <strong>store</strong> 数据注入到目标组件的 <strong>props</strong> 中。</p>
+<hr>
+<h1 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h1><p>在网上经常可以看到，<strong>React</strong> 中的 <strong>useContext</strong> 和 <strong>useReducer</strong> 已经可以基本满足状态管理的需求了，那么为什么还需要 <strong>react-redux</strong> ，直接使用 <strong>useContext</strong> 并注入 <strong>redux</strong> 中的 <strong>store</strong> 不就好了吗？</p>
+<p>首先使用 <strong>useContext</strong> 就表明不可直接将数据注入 <strong>props</strong> 中，当然使用 <strong>hooks</strong> 也有他的好处。但是由于 <strong>redux</strong> 的状态 <strong>state</strong> 是通过闭包保存在 <strong>store</strong> 里面的，所以当调用 <strong>dispatch</strong> 改变 <strong>state</strong> 时，<strong>React</strong> 的 <strong>Context API</strong> 是检测不到 <strong>store</strong> 的变化的，也无法进行更新，因此必须实现一套新的 <strong>API</strong> 供 <strong>React</strong> 使用 <strong>redux</strong> 。</p>
+<hr>
+<h1 id="Provider"><a href="#Provider" class="headerlink" title="Provider"></a>Provider</h1><p>首先来实现 <strong>Provider</strong> 组件，他的核心与 <strong>React</strong> 中的 <strong>Context</strong> 类似，就是注入目标数据 <strong>store</strong> ，供子组件使用。</p>
+<p>翻开源码会发现，<strong>Provider</strong> 组件依然使用了 <strong>React Context</strong> ，主要做了以下内容：</p>
+<ol>
+<li>全局通过 <strong>createContext</strong> 创建一个 <strong>ReactReduxContext</strong> 对象</li>
+<li>在 <strong>Provider</strong> 函数组件里创建一个 <strong>subscription</strong> 对象，方便后续状态更新的派发</li>
+<li>组件最后以 <strong>Context.Provider</strong> 渲染，注入 <strong>store</strong> 和 <strong>subscription</strong></li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React, &#123; useEffect, useMemo &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> createSubscription <span class="keyword">from</span> <span class="string">&#x27;../utils/Subscription&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  全局创建 Context</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> ReactReduxContext = React.createContext(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> Provider = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">//  从props中获取store</span></span><br><span class="line">    <span class="keyword">const</span> &#123; store, context, children &#125; = props;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  创建subscription，并用useMemo缓存contextValue</span></span><br><span class="line">    <span class="keyword">const</span> contextValue = useMemo(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> subscription = createSubscription(store);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">            store,</span><br><span class="line">            subscription</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, [store])</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  缓存旧的state状态</span></span><br><span class="line">    <span class="keyword">const</span> previousState = useMemo(<span class="function">() =&gt;</span> store.getState(), [store]);</span><br><span class="line"></span><br><span class="line">    useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; subscription &#125; = contextValue;</span><br><span class="line">        <span class="comment">//  定义状态更新回调函数</span></span><br><span class="line">        subscription.onStateChange = subscription.notifyNestedSubs;</span><br><span class="line">        <span class="comment">//  注册监听</span></span><br><span class="line">        subscription.trySubscribe();</span><br><span class="line"></span><br><span class="line">        <span class="comment">//  状态发生改变，派发更新</span></span><br><span class="line">        <span class="keyword">if</span> (previousState !== store.getState()) &#123;</span><br><span class="line">            subscription.notifyNestedSubs();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//  解除监听</span></span><br><span class="line">        <span class="keyword">return</span> <span class="function">() =&gt;</span> &#123;</span><br><span class="line">            subscription.onStateChange = <span class="literal">null</span>;</span><br><span class="line">            subscription.tryUnSubscribe();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, [])</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  获取最终Context</span></span><br><span class="line">    <span class="keyword">const</span> Context = context || ReactReduxContext;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="comment">//  利用Provider形式注入contextValue</span></span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">Context.Provider</span> <span class="attr">value</span>=<span class="string">&#123;contextValue&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">            &#123;children&#125;</span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">Context.Provider</span>&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> Provider;</span><br></pre></td></tr></table></figure>
+
+<hr>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/12/04/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-react-redux/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/02/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAmini-redux/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -828,82 +915,11 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/" class="post-title-link" itemprop="url">React中的HOC</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-11-19 13:55:34" itemprop="dateCreated datePublished" datetime="2021-11-19T13:55:34+08:00">2021-11-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-20 10:03:34" itemprop="dateModified" datetime="2021-11-20T10:03:34+08:00">2021-11-20</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="HOC的两种方式"><a href="#HOC的两种方式" class="headerlink" title="HOC的两种方式"></a>HOC的两种方式</h1><h2 id="属性代理"><a href="#属性代理" class="headerlink" title="属性代理"></a>属性代理</h2><p>作用：增强props</p>
-<p>缺点：无法获取原组件的状态，如生命周期等不可控</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">HOC</span>(<span class="params">WrappedComponent</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="title">AdvancedComponent</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="title">constructor</span>(<span class="params">props</span>)</span> &#123;</span><br><span class="line">            <span class="built_in">super</span>(props);</span><br><span class="line">            <span class="built_in">this</span>.state = &#123;</span><br><span class="line">                <span class="attr">visible</span>: <span class="literal">true</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="title">render</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="xml"><span class="tag">&lt;<span class="name">WrappedComponent</span> &#123;<span class="attr">...this.state</span>&#125; &#123;<span class="attr">...this.props</span>&#125; /&gt;</span></span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/19/React%E4%B8%AD%E7%9A%84HOC/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+  </nav>
 
 
 
@@ -968,7 +984,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
