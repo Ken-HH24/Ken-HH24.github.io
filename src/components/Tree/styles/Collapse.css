@@ -1,0 +1,35 @@
+/* .collapse {
+    overflow: hidden;
+}
+
+.collapse-show {
+    animation: show 0.5s linear;
+}
+
+@keyframes show {
+    0% {
+        max-height: 0;
+    }
+
+    100% {
+        max-height: 100px;
+    }
+}
+
+.collapse-hide {
+    animation: hide 0.5s linear;
+}
+
+@keyframes hide {
+    0% {
+        max-height: 100px;
+    }
+
+    100% {
+        max-height: 0;
+    }
+} */
+
+.collapse {
+    overflow: hidden;
+}
