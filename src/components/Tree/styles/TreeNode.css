@@ -1,0 +1,44 @@
+.tree-node {
+    --tree-node-padding: 18px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    padding-top: 0.5em;
+    cursor: pointer;
+}
+
+.right svg {
+    transition: 0.3s all linear;
+}
+
+.right.expanded svg {
+    transform: rotate(90deg);
+}
+
+.tree-node-label {
+    padding-left: 0.5em;
+}
+
+.tree-node-level-0 {
+    padding-left: 0;
+}
+
+.tree-node-level-1 {
+    padding-left: calc(var(--tree-node-padding) * 1);
+}
+
+.tree-node-level-2 {
+    padding-left: calc(var(--tree-node-padding) * 2);
+}
+
+.tree-node-level-3 {
+    padding-left: calc(var(--tree-node-padding) * 3);
+}
+
+.tree-node-level-4 {
+    padding-left: calc(var(--tree-node-padding) * 4);
+}
+
+.tree-node-level-5 {
+    padding-left: calc(var(--tree-node-padding) * 5);
+}

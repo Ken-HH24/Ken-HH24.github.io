@@ -1,10 +1,10 @@
 import React from 'react';
-import ReactReduxDemo from './react-redux/demo';
+import TreeDemo from './components/Tree/demo';
 
 function App() {
   return (
     <div className="App">
-      <ReactReduxDemo />
+      <TreeDemo />
     </div>
   );
 }
