@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="previewaxios 是前端常用的网络请求库，在 github 上有将近 90k stars 。翻开源码，其核心实现部分也并不复杂，个人觉得精髓在于 interceptor 拦截器 和 Adapter 适配器的设计。 axios在 src 目录下的 axios.js ，可以看到该文件使用 createInstance() 创建了一个 axios ，然后将其 export 。然而 axios 并">
+<meta property="og:type" content="article">
+<meta property="og:title" content="源码实践 - axios">
+<meta property="og:url" content="http://example.com/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="previewaxios 是前端常用的网络请求库，在 github 上有将近 90k stars 。翻开源码，其核心实现部分也并不复杂，个人觉得精髓在于 interceptor 拦截器 和 Adapter 适配器的设计。 axios在 src 目录下的 axios.js ，可以看到该文件使用 createInstance() 创建了一个 axios ，然后将其 export 。然而 axios 并">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-12-10T02:23:18.000Z">
+<meta property="article:modified_time" content="2021-12-10T06:59:50.302Z">
+<meta property="article:author" content="Ken">
+<meta property="article:tag" content="源码实践">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>源码实践 - axios | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          源码实践 - axios
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-12-10 10:23:18 / Modified: 14:59:50" itemprop="dateCreated datePublished" datetime="2021-12-10T10:23:18+08:00">2021-12-10</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>axios</strong> 是前端常用的网络请求库，在 <strong>github</strong> 上有将近 <strong>90k stars</strong> 。翻开源码，其核心实现部分也并不复杂，个人觉得精髓在于 <strong>interceptor</strong> 拦截器 和 <strong>Adapter</strong> 适配器的设计。</p>
+<h1 id="axios"><a href="#axios" class="headerlink" title="axios"></a>axios</h1><p>在 <strong>src</strong> 目录下的 <strong>axios.js</strong> ，可以看到该文件使用 <strong>createInstance()</strong> 创建了一个 <strong>axios</strong> ，然后将其 <strong>export</strong> 。然而 <strong>axios</strong> 并不是简单的 <strong>Axios</strong> 实例，而是 <strong>Axios.prototype.request</strong> 方法。至于为什么要这样做，大概是因为 <strong>axios</strong> 需要提供 <code>axios(config)</code> 这种使用方式。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create an instance of Axios</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Object&#125;</span> </span>defaultConfig The default config for the instance</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return <span class="type">&#123;Axios&#125;</span> </span>A new instance of Axios</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">createInstance</span>(<span class="params">defaultConfig</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> context = <span class="keyword">new</span> Axios(defaultConfig);</span><br><span class="line">  <span class="keyword">var</span> instance = bind(Axios.prototype.request, context);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Copy axios.prototype to instance</span></span><br><span class="line">  utils.extend(instance, Axios.prototype, context);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Copy context to instance</span></span><br><span class="line">  utils.extend(instance, context);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Factory for creating new instances</span></span><br><span class="line">  instance.create = <span class="function"><span class="keyword">function</span> <span class="title">create</span>(<span class="params">instanceConfig</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> createInstance(mergeConfig(defaultConfig, instanceConfig));</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Create the default instance to be exported</span></span><br><span class="line"><span class="keyword">var</span> axios = createInstance(defaults);</span><br></pre></td></tr></table></figure>
+
+<p>源码里 <strong>createInstance</strong> 函数的一些代码可能现在还不清楚其用途，但是可以按照现在的理解构建出相似的代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> Axios <span class="keyword">from</span> <span class="string">&#x27;./core/Axios&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> createInstance = <span class="function">(<span class="params">defaultConfig</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> context = <span class="keyword">new</span> Axios(defaultConfig);</span><br><span class="line">    <span class="comment">// 创建的实例是Axios里的request函数</span></span><br><span class="line">    <span class="keyword">const</span> instance = context.request.bind(context);</span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> axios = createInstance();</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> axios;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<span id="more"></span>
+
+<h1 id="Axios"><a href="#Axios" class="headerlink" title="Axios"></a>Axios</h1><p>重点就在于需要实现 <strong>Axios</strong> 这个类。首先，其构造函数如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Axios</span>(<span class="params">instanceConfig</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">this</span>.defaults = instanceConfig;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Axios-prototype-request"><a href="#Axios-prototype-request" class="headerlink" title="Axios.prototype.request"></a>Axios.prototype.request</h2><p>现在再来写核心的 <strong>request</strong> 方法， 对于网络请求 <strong>axios</strong> 同样是使用 <strong>XMLHttpRequest</strong> 实现的：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Axios.prototype.request = <span class="function"><span class="keyword">function</span> <span class="title">request</span>(<span class="params">config</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; url = <span class="string">&#x27;&#x27;</span>, method = <span class="string">&#x27;get&#x27;</span>, data = &#123;&#125; &#125; = config;</span><br><span class="line">        <span class="keyword">const</span> xhr = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line">        xhr.open(method, url, <span class="literal">true</span>);</span><br><span class="line">        xhr.onload = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">            resolve(xhr.responseText);</span><br><span class="line">        &#125;</span><br><span class="line">        xhr.send(data);</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Axios-prototype-method"><a href="#Axios-prototype-method" class="headerlink" title="Axios.prototype[method]"></a>Axios.prototype[method]</h2><p>但是平时在使用 <strong>axios</strong> 的时候，还会提供 <strong>axios.get</strong> 功能，所以需要按照不同的请求方法也放在 <strong>Axios.prototype</strong> 上。另外对于不同的请求和上传方法，因为参数数量的不同，还需要分开处理，但原理都是调用 <strong>Axios.prototype.request</strong> 方法。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 请求方法，两个参数</span></span><br><span class="line"><span class="keyword">const</span> methodsWithoutData = [<span class="string">&#x27;get&#x27;</span>, <span class="string">&#x27;delete&#x27;</span>, <span class="string">&#x27;head&#x27;</span>, <span class="string">&#x27;options&#x27;</span>];</span><br><span class="line">methodsWithoutData.forEach(<span class="function"><span class="params">method</span> =&gt;</span> &#123;</span><br><span class="line">    Axios.prototype[method] = <span class="function"><span class="keyword">function</span> (<span class="params">url, config</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.request(&#123;</span><br><span class="line">            <span class="attr">url</span>: url,</span><br><span class="line">            <span class="attr">method</span>: method,</span><br><span class="line">            <span class="attr">data</span>: (config || &#123;&#125;).data</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 上传数据方法，多一个data参数</span></span><br><span class="line"><span class="keyword">const</span> methodsWithData = [<span class="string">&#x27;post&#x27;</span>, <span class="string">&#x27;put&#x27;</span>, <span class="string">&#x27;patch&#x27;</span>];</span><br><span class="line">methodsWithData.forEach(<span class="function"><span class="params">method</span> =&gt;</span> &#123;</span><br><span class="line">    Axios.prototype[method] = <span class="function"><span class="keyword">function</span> (<span class="params">url, data, config</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">this</span>.request(&#123;</span><br><span class="line">            <span class="attr">url</span>: url,</span><br><span class="line">            <span class="attr">method</span>: method,</span><br><span class="line">            <span class="attr">data</span>: data || &#123;&#125;,</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="utils-extend"><a href="#utils-extend" class="headerlink" title="utils.extend"></a>utils.extend</h1><p>这个时候 <strong>Axios</strong> 对象有了基本的 <strong>get</strong> ， <strong>post</strong> 这些方法，但是前面提到最终导出的是 <strong>Axios.prototype.request</strong> ，该对象不具有这些请求方法。</p>
+<p>所以在 <strong>createInstance()</strong> 里通过 <strong>utils.extend</strong> 把 <strong>Axios.prototype</strong> 上的属性和方法全部都转移到了最终导出的 <strong>axios</strong> 对象上。</p>
+<p>该函数的实现也挺简单，通过 <strong>const key in b</strong> 遍历对象上的属性，然后利用 <strong>hasOwnProperty</strong> 方法判断该属性是否处在对象自身。如果是函数使用 <strong>bind</strong> 将其保留下来，否则直接赋值：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">extend</span>(<span class="params">a, b, context</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 遍历属性</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> key <span class="keyword">in</span> b) &#123;</span><br><span class="line">        <span class="comment">// 判断是否属于对象自身</span></span><br><span class="line">        <span class="keyword">if</span> (b.hasOwnProperty(key)) &#123;</span><br><span class="line">            <span class="comment">// 是函数，利用bind保存</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">typeof</span> b[key] === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">                a[key] = b[key].bind(context);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                a[key] = b[key];</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> createInstance = <span class="function">(<span class="params">defaultConfig</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> context = <span class="keyword">new</span> Axios(defaultConfig);</span><br><span class="line">    <span class="comment">// 创建的实例是Axios里的request函数</span></span><br><span class="line">    <span class="keyword">const</span> instance = context.request.bind(context);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// instance缺少Axios.prototype上的get等方法，需要借助utils转移</span></span><br><span class="line">    utils.extend(instance, Axios.prototype, context);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="Interceptor"><a href="#Interceptor" class="headerlink" title="Interceptor"></a>Interceptor</h1><p>完成了上面的工作之后就可以通过 <strong>axios</strong> 进行正常的网络请求了，但是有时候需要在请求之前对数据作某种处理，或者在获得数据后对数据进行过滤。这些需求就衍生出了 <strong>Interceptor</strong> 。</p>
+<h2 id="InterceptorManager"><a href="#InterceptorManager" class="headerlink" title="InterceptorManager"></a>InterceptorManager</h2><p>源码里的 <strong>interceptor</strong> 都交给 <strong>InterceptorManager</strong> 管理，而其内部结构也很简单，只有一个 <strong>handlers</strong> 数组保留所有 <strong>interceptor</strong> ，然后 <strong>Axios</strong> 里对于请求过程和获取过程对应地建立两个 <strong>InterceptorManager</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">InterceptorManager</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 保存所有 interceptor</span></span><br><span class="line">    <span class="built_in">this</span>.handlers = [];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Axios</span>(<span class="params">instanceConfig</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">this</span>.defaults = instanceConfig;</span><br><span class="line">    <span class="built_in">this</span>.interceptors = &#123;</span><br><span class="line">        <span class="attr">request</span>: <span class="keyword">new</span> InterceptorManager(),</span><br><span class="line">        <span class="attr">response</span>: <span class="keyword">new</span> InterceptorManager()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而当用户需要使用某个 <strong>interceptor</strong> 的时候，会调用 <strong>InterceptorManager.prototype.use</strong> 方法，传入两个参数，分别是请求成功和失败的 <strong>interceptor</strong> 函数。</p>
+<p>在 <strong>use</strong> 函数内会将两个函数包装成对象放在 <strong>handlers</strong> 数组里，然后返回该 <strong>interceptor</strong> 的下标。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">InterceptorManager.prototype.use = <span class="function"><span class="keyword">function</span> (<span class="params">fullfilled, rejected, config</span>) </span>&#123;</span><br><span class="line">    <span class="built_in">this</span>.handlers.push(&#123;</span><br><span class="line">        fullfilled,</span><br><span class="line">        rejected,</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.handlers.length - <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是 <strong>use</strong> 方法和之前的 <strong>get</strong> 方法有一个共同的问题，那就是 <strong>use</strong> 函数处在 <strong>InterceptorManager.prototype</strong> 上，而 <strong>axios</strong> 是一个 <strong>Axios.prototype.request</strong> 对象，不能直接调用 <strong>use()</strong> 方法。</p>
+<p>目的是最后能够实现 <strong>axios.interceptors.request.use()</strong> ，那么做法与之前一样。在 <strong>createInstance</strong> 方法里，通过 <strong>utils.extend</strong> 把 <strong>Axios</strong> 的 <strong>interceptors</strong> 属性转移到 <strong>axios</strong> 对象上：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> createInstance = <span class="function">(<span class="params">defaultConfig</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> context = <span class="keyword">new</span> Axios(defaultConfig);</span><br><span class="line">    <span class="comment">// 创建的实例是Axios里的request函数</span></span><br><span class="line">    <span class="keyword">const</span> instance = context.request.bind(context);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// instance缺少Axios.prototype上的get等方法，需要借助utils转移</span></span><br><span class="line">    utils.extend(instance, Axios.prototype, context);</span><br><span class="line">    <span class="comment">// 将interceptors移给instance</span></span><br><span class="line">    utils.extend(instance, context);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="pipline"><a href="#pipline" class="headerlink" title="pipline"></a>pipline</h2><p>上面只是提到了 <strong>interceptor</strong> 如何注入到一个 <strong>axios</strong> 请求里，那么当真正执行 <strong>request</strong> 函数的时候，<strong>axios</strong> 是如何把众多拦截器串联在一起的呢？</p>
+<p><strong>axios</strong> 源码把过程分为了向服务端发送请求和从服务端获取数据两个过程，建立一个 <strong>chain</strong> 数组，初始值是一个 <strong>dispatchRequest</strong> 函数和 <strong>undefined</strong> ：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> chain = [dispatchRequest, <span class="literal">undefined</span>];</span><br></pre></td></tr></table></figure>
+
+<p>然后把 <strong>interceptors.request</strong> 的每一个对象，都推到 <strong>chain</strong> 数组的开头，把 <strong>interceptors.response</strong> 的每一个对象推到末尾，在该过程中还把 <strong>fufilled</strong> 和 <strong>rejected</strong> 两种状态分开了</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">this</span>.interceptors.request.handlers.forEach(<span class="function"><span class="params">interceptor</span> =&gt;</span> &#123;</span><br><span class="line">    chain.unshift(interceptor.fullfilled, interceptor.rejected);</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="built_in">this</span>.interceptors.response.handlers.forEach(<span class="function"><span class="params">interceptor</span> =&gt;</span> &#123;</span><br><span class="line">    chain.push(interceptor.fullfilled, interceptor.rejected);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>最后生成一个 <strong>resolve(config)</strong> 的 <strong>Promise</strong> ，进入循环，不断从 <strong>chain</strong> 数组中取出每个 <strong>interceptor</strong> 的 <strong>fullfilled</strong> 和 <strong>rejected</strong> ，调用 <strong>then</strong> 方法获取最新的 <strong>Promise</strong> ，进而返回出去：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> promise = <span class="built_in">Promise</span>.resolve(config);</span><br><span class="line"><span class="keyword">while</span> (chain.length) &#123;</span><br><span class="line">    promise = promise.then(chain.shift(), chain.shift());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> promise;</span><br></pre></td></tr></table></figure>
+
+<p>在上述过程中，所有 <strong>interceptor</strong> 被组装起来，像管道 <strong>pipline</strong> 一样对请求进行处理，共分为了三个阶段：</p>
+<ol>
+<li>向服务端请求过程：此时 <strong>Promise</strong> 里能够访问的一直是 <strong>config</strong> 变量，在每个函数处理完成后，还要把新的 <strong>config</strong> 返回出去</li>
+<li>调用 <strong>dispatchRequest</strong> ：此时拿到最后生成的 <strong>config</strong> ，基于 <strong>XMLHttpRequest</strong> ，进行真正地请求</li>
+<li>从服务端获取数据：此时拿到了刚刚 <strong>dispatchRequest</strong> 返回的 <strong>Promise</strong> ，而里面 <strong>resolve</strong> 的是 <strong>data</strong> ，所以在后面调用 <strong>then()</strong> 的时候，<strong>Promise</strong> 里能够访问的是 <strong>data</strong> 变量</li>
+</ol>
+<hr>
+<h1 id="Adapter"><a href="#Adapter" class="headerlink" title="Adapter"></a>Adapter</h1><p>进一步研究 <strong>dispatchRequest</strong> 这个函数，会发现他里面真正调用的是 <strong>adapter</strong> 这个函数，这就是 <strong>axios</strong> 的另一个特点，为了应对浏览器端与服务端的差异，采用了 <strong>适配器模式</strong> 来对网络请求进行不同的处理。在浏览器内使用的是 <strong>XMLHttpRequest</strong> ，而在服务端使用的是 <strong>Node</strong> 的 <strong>http</strong> 。另外，使用者也可以根据自己的需求，来创建适配器 <strong>adapter</strong>。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> xhrAdapter <span class="keyword">from</span> <span class="string">&#x27;./adapter/xhr&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getDefaultAdapter</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> adapter;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 判断是否为浏览器端</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> XMLHttpRequest !== <span class="literal">undefined</span>)</span><br><span class="line">        adapter = xhrAdapter;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">typeof</span> process !== <span class="string">&#x27;undefined&#x27;</span> &amp;&amp; <span class="built_in">Object</span>.prototype.toString.call(process) === <span class="string">&#x27;[object process]&#x27;</span>)</span><br><span class="line">        adapter = &#123;&#125;  <span class="comment">// <span class="doctag">TODO:</span> impletementation</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> adapter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="xhr-js"><a href="#xhr-js" class="headerlink" title="xhr.js"></a>xhr.js</h2><p>探究一下浏览器端使用的适配器，就会发现很多熟悉的处理，比如把获取的数据放在最终返回对象的 <strong>data</strong> 属性里，或者是为了防止 <strong>CSRF</strong> 攻击，采用了双端 <strong>cookie</strong> 的策略：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">xhrAdapter</span>(<span class="params">config</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> <span class="title">dispatchXhrRequest</span>(<span class="params">resolve, reject</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> requestData = config.data;</span><br><span class="line">    <span class="keyword">var</span> requestHeaders = config.headers;</span><br><span class="line">    <span class="keyword">var</span> responseType = config.responseType;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> request = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> fullPath = buildFullPath(config.baseURL, config.url);</span><br><span class="line">    request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">onloadend</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (!request) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">var</span> responseHeaders = <span class="string">&#x27;getAllResponseHeaders&#x27;</span> <span class="keyword">in</span> request ? parseHeaders(request.getAllResponseHeaders()) : <span class="literal">null</span>;</span><br><span class="line">      <span class="keyword">var</span> responseData = !responseType || responseType === <span class="string">&#x27;text&#x27;</span> ||  responseType === <span class="string">&#x27;json&#x27;</span> ?</span><br><span class="line">        request.responseText : request.response;</span><br><span class="line">      <span class="keyword">var</span> response = &#123;</span><br><span class="line">        <span class="attr">data</span>: responseData,</span><br><span class="line">        <span class="attr">status</span>: request.status,</span><br><span class="line">        <span class="attr">statusText</span>: request.statusText,</span><br><span class="line">        <span class="attr">headers</span>: responseHeaders,</span><br><span class="line">        <span class="attr">config</span>: config,</span><br><span class="line">        <span class="attr">request</span>: request</span><br><span class="line">      &#125;;</span><br><span class="line"></span><br><span class="line">      settle(<span class="function"><span class="keyword">function</span> <span class="title">_resolve</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">        resolve(value);</span><br><span class="line">        done();</span><br><span class="line">      &#125;, <span class="function"><span class="keyword">function</span> <span class="title">_reject</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">        reject(err);</span><br><span class="line">        done();</span><br><span class="line">      &#125;, response);</span><br><span class="line"></span><br><span class="line">      request = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">&#x27;onloadend&#x27;</span> <span class="keyword">in</span> request) &#123;</span><br><span class="line">      request.onloadend = onloadend;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      request.onreadystatechange = <span class="function"><span class="keyword">function</span> <span class="title">handleLoad</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!request || request.readyState !== <span class="number">4</span>) &#123;</span><br><span class="line">          <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (request.status === <span class="number">0</span> &amp;&amp; !(request.responseURL &amp;&amp; request.responseURL.indexOf(<span class="string">&#x27;file:&#x27;</span>) === <span class="number">0</span>)) &#123;</span><br><span class="line">          <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">setTimeout</span>(onloadend);</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Add xsrf header</span></span><br><span class="line">    <span class="comment">// This is only done if running in a standard browser environment.</span></span><br><span class="line">    <span class="comment">// Specifically not if we&#x27;re in a web worker, or react-native.</span></span><br><span class="line">    <span class="keyword">if</span> (utils.isStandardBrowserEnv()) &#123;</span><br><span class="line">      <span class="comment">// Add xsrf header</span></span><br><span class="line">      <span class="keyword">var</span> xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) &amp;&amp; config.xsrfCookieName ?</span><br><span class="line">        cookies.read(config.xsrfCookieName) :</span><br><span class="line">        <span class="literal">undefined</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (xsrfValue) &#123;</span><br><span class="line">        requestHeaders[config.xsrfHeaderName] = xsrfValue;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!requestData) &#123;</span><br><span class="line">      requestData = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Send the request</span></span><br><span class="line">    request.send(requestData);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>而在本次实践中，只大概地实现了一下对于 <strong>responseData</strong> 的处理：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">xhrAdapter</span>(<span class="params">config</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> requestData = config.data;</span><br><span class="line">        <span class="keyword">const</span> responseType = config.responseType;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">const</span> xhr = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line">        xhr.open(config.method.toUpperCase(), config.url, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">onLoadend</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="keyword">if</span> (!xhr)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">const</span> responseData = !responseType || responseType === <span class="string">&#x27;text&#x27;</span> || responseType === <span class="string">&#x27;json&#x27;</span></span><br><span class="line">                ? xhr.responseText : xhr.response;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">const</span> response = &#123;</span><br><span class="line">                <span class="attr">data</span>: responseData,</span><br><span class="line">                <span class="attr">status</span>: xhr.status,</span><br><span class="line">                <span class="attr">statusText</span>: xhr.statusText,</span><br><span class="line">                <span class="attr">config</span>: config,</span><br><span class="line">                <span class="attr">request</span>: xhr</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            resolve(response);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="string">&#x27;onloadend&#x27;</span> <span class="keyword">in</span> config) &#123;</span><br><span class="line">            xhr.onloadend = onLoadend;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            xhr.onreadystatechange = <span class="function"><span class="keyword">function</span> <span class="title">handleLoad</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">                <span class="keyword">if</span> (!xhr || xhr.readyState !== <span class="number">4</span>)</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (xhr.status === <span class="number">0</span> &amp;&amp; !(xhr.responseURL &amp;&amp; xhr.responseURL.indexOf(<span class="string">&#x27;file:&#x27;</span>) === <span class="number">0</span>))</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">                <span class="built_in">setTimeout</span>(onLoadend);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        xhr.send(requestData || <span class="literal">null</span>);</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="utils-forEach"><a href="#utils-forEach" class="headerlink" title="utils.forEach"></a>utils.forEach</h1><p><strong>axios</strong> 源码里还有一个颇为优秀的点就是其代码复用能力，前面把 <strong>get</strong> 等方法放在 <strong>Axios.prototype</strong> ，和把 <strong>Axios</strong> 对象的属性放在 <strong>axios</strong> 上时，都有遍历某个对象的过程，于是源码里把这一过程抽象出来，放在了 <strong>utils.forEach</strong> 里，有点 <strong>迭代器模式</strong> 的味道，也和 <strong>semi design</strong> 里的 <strong>traverseDataNodes</strong> 函数实现风格相近：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Iterate over an Array or an Object invoking a function for each item.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * If `obj` is an Array callback will be called passing</span></span><br><span class="line"><span class="comment"> * the value, index, and complete array for each item.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * If &#x27;obj&#x27; is an Object callback will be called passing</span></span><br><span class="line"><span class="comment"> * the value, key, and complete object for each property.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Object|Array&#125;</span> </span>obj The object to iterate</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Function&#125;</span> </span>fn The callback to invoke for each item</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">forEach</span>(<span class="params">obj, fn</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// Don&#x27;t bother if no value provided</span></span><br><span class="line">  <span class="keyword">if</span> (obj === <span class="literal">null</span> || <span class="keyword">typeof</span> obj === <span class="string">&#x27;undefined&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Force an array if not already something iterable</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> obj !== <span class="string">&#x27;object&#x27;</span>) &#123;</span><br><span class="line">    <span class="comment">/*eslint no-param-reassign:0*/</span></span><br><span class="line">    obj = [obj];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (isArray(obj)) &#123;</span><br><span class="line">    <span class="comment">// Iterate over array values</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>, l = obj.length; i &lt; l; i++) &#123;</span><br><span class="line">      fn.call(<span class="literal">null</span>, obj[i], i, obj);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// Iterate over object keys</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> obj) &#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="built_in">Object</span>.prototype.hasOwnProperty.call(obj, key)) &#123;</span><br><span class="line">        fn.call(<span class="literal">null</span>, obj[key], key, obj);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用：</span></span><br><span class="line">utils.forEach([<span class="string">&#x27;post&#x27;</span>, <span class="string">&#x27;put&#x27;</span>, <span class="string">&#x27;patch&#x27;</span>], <span class="function"><span class="keyword">function</span> <span class="title">forEachMethodWithData</span>(<span class="params">method</span>) </span>&#123;</span><br><span class="line">  <span class="comment">/*eslint func-names:0*/</span></span><br><span class="line">  Axios.prototype[method] = <span class="function"><span class="keyword">function</span>(<span class="params">url, data, config</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.request(mergeConfig(config || &#123;&#125;, &#123;</span><br><span class="line">      <span class="attr">method</span>: method,</span><br><span class="line">      <span class="attr">url</span>: url,</span><br><span class="line">      <span class="attr">data</span>: data</span><br><span class="line">    &#125;));</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Extends object a by mutably adding to it the properties of object b.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Object&#125;</span> </span>a The object to be extended</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Object&#125;</span> </span>b The object to copy properties from</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Object&#125;</span> </span>thisArg The object to bind function to</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return <span class="type">&#123;Object&#125;</span> </span>The resulting value of object a</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">extend</span>(<span class="params">a, b, thisArg</span>) </span>&#123;</span><br><span class="line">  forEach(b, <span class="function"><span class="keyword">function</span> <span class="title">assignValue</span>(<span class="params">val, key</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (thisArg &amp;&amp; <span class="keyword">typeof</span> val === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">      a[key] = bind(val, thisArg);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      a[key] = val;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过阅读 <strong>axios</strong> 的源码，主要有以下收获：</p>
+<ol>
+<li><strong>interceptor</strong> 拦截器是如何实现的</li>
+<li>面对不同平台的网络请求， <strong>axios</strong> 采用了 <strong>适配器模式</strong> 创建 <strong>adapter</strong> 解决</li>
+<li>在浏览器端的网络请求里，底层依赖的依然是 <strong>XMLHttpRequest</strong> </li>
+<li>最后的网络请求都走向 <strong>request</strong> 函数，但是通过将 <strong>get</strong> 等方法转到 <strong>prototype</strong> ，<strong>prototype</strong> 转到 <strong>axios (实际上也是request函数)</strong> ，提供了不同的 <strong>api</strong> 请求方式</li>
+<li><strong>utils.js</strong> 里把遍历过程抽象出来，实现更强大函数的方法</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5/" rel="tag"># 源码实践</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/12/08/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" rel="prev" title="组件实践 - Tree树形控件">
+      <i class="fa fa-chevron-left"></i> 组件实践 - Tree树形控件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#preview"><span class="nav-number">1.</span> <span class="nav-text">preview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#axios"><span class="nav-number">2.</span> <span class="nav-text">axios</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Axios"><span class="nav-number">3.</span> <span class="nav-text">Axios</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Axios-prototype-request"><span class="nav-number">3.1.</span> <span class="nav-text">Axios.prototype.request</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Axios-prototype-method"><span class="nav-number">3.2.</span> <span class="nav-text">Axios.prototype[method]</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#utils-extend"><span class="nav-number">4.</span> <span class="nav-text">utils.extend</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Interceptor"><span class="nav-number">5.</span> <span class="nav-text">Interceptor</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#InterceptorManager"><span class="nav-number">5.1.</span> <span class="nav-text">InterceptorManager</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pipline"><span class="nav-number">5.2.</span> <span class="nav-text">pipline</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Adapter"><span class="nav-number">6.</span> <span class="nav-text">Adapter</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#xhr-js"><span class="nav-number">6.1.</span> <span class="nav-text">xhr.js</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#utils-forEach"><span class="nav-number">7.</span> <span class="nav-text">utils.forEach</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Ken-HH24" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
