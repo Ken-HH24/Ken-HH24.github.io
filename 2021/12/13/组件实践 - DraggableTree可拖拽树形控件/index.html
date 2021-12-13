@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="preview在上一次组件实践中模仿了 semi design 完成了 Tree树形控件 的基本功能。在这基础上可以添加许多额外功能，比如 select ，checkbox 的支持。但是这些都稍显简单了，基本思路就是在 TreeNode 里添加相应的事件监听，然后根据 F &#x2F; A 架构在 TreeFoundation.js 里书写逻辑，添加对应的 selectedKeys 或者 checkedKe">
+<meta property="og:type" content="article">
+<meta property="og:title" content="组件实践 - DraggableTree可拖拽树形控件">
+<meta property="og:url" content="http://example.com/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="preview在上一次组件实践中模仿了 semi design 完成了 Tree树形控件 的基本功能。在这基础上可以添加许多额外功能，比如 select ，checkbox 的支持。但是这些都稍显简单了，基本思路就是在 TreeNode 里添加相应的事件监听，然后根据 F &#x2F; A 架构在 TreeFoundation.js 里书写逻辑，添加对应的 selectedKeys 或者 checkedKe">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-12-13T06:19:11.000Z">
+<meta property="article:modified_time" content="2021-12-13T07:42:17.530Z">
+<meta property="article:author" content="Ken">
+<meta property="article:tag" content="组件实践">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>组件实践 - DraggableTree可拖拽树形控件 | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          组件实践 - DraggableTree可拖拽树形控件
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-12-13 14:19:11 / Modified: 15:42:17" itemprop="dateCreated datePublished" datetime="2021-12-13T14:19:11+08:00">2021-12-13</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>在上一次组件实践中模仿了 <strong>semi design</strong> 完成了 <strong>Tree树形控件</strong> 的基本功能。在这基础上可以添加许多额外功能，比如 <strong>select</strong> ，<strong>checkbox</strong> 的支持。但是这些都稍显简单了，基本思路就是在 <strong>TreeNode</strong> 里添加相应的事件监听，然后根据 <strong>F / A</strong> 架构在 <strong>TreeFoundation.js</strong> 里书写逻辑，添加对应的 <strong>selectedKeys</strong> 或者 <strong>checkedKeys</strong> 即可。</p>
+<p>而拖拽功能在如今前端里应用得很广泛，<strong>semi design</strong> 在 <strong>Tree树形控件</strong> 里也集成了该功能。在我看来，实现的难点主要为：</p>
+<ol>
+<li>在拖拽事件结束后，原节点顺序被打乱，如何快速得到新的节点顺序是关键</li>
+<li>如何在拖拽的过程中提供较良好的用户体验，比如在用户拖动到文件夹上时，该结构会自动展开。又或者添加适当的提醒让用户知道现在的拖拽结果</li>
+</ol>
+<p>而以上问题都在阅读 <strong>semi design</strong> 源码，并自己动手实践后得到解决。</p>
+<hr>
+<h1 id="draggable"><a href="#draggable" class="headerlink" title="draggable"></a>draggable</h1><p>首先要达到可拖拽的效果，就需要使用 <strong>draggable</strong> 这个 <strong>API</strong> ，首先需要显式地在标签里添加 <strong>draggable = ‘true’</strong> 而不能只写 <strong>draggable</strong> 。</p>
+<p>然后为每个 <strong>TreeNode</strong> 添加 <strong>onDragStart</strong> ， <strong>onDragEnter</strong> 等事件。其中在 <strong>onDragStart</strong> 事件中，需要特别地调用 <code>e.dataTransfer.setData(&#39;text/plain&#39;, &#39;&#39;);</code> ，否则在某些浏览器内不会生效。另外在拖拽 <strong>&lt;li&gt;</strong> 标签的过程中会发现鼠标状态一直是一个禁止的图标，非常影响用户体验，要解决这个问题则需要在其他 <strong>drag</strong> 事件中添加 <code>e.dataTransfer.dropEffect = &#39;move&#39;;</code> ，改为移动图标。</p>
+<hr>
+<h1 id="F-A"><a href="#F-A" class="headerlink" title="F / A"></a>F / A</h1><p>首先依然是贯彻 <strong>semi design</strong> 的 <strong>F / A</strong> 架构，将整个事件的处理逻辑放在 <strong>TreeFoundation.js</strong> 中，然后将对应的事件处理函数放入 <strong>Context</strong> ， <strong>TreeNode</strong> 只负责调用即可。</p>
+<h2 id="onDragStart"><a href="#onDragStart" class="headerlink" title="onDragStart"></a>onDragStart</h2><p>在拖拽的最开始，需要做的事情主要有两步：</p>
+<ol>
+<li>记录被拖拽的节点</li>
+<li>更新 <strong>Tree</strong> 状态</li>
+</ol>
+<p>主要涉及以下状态：</p>
+<table>
+<thead>
+<tr>
+<th>state</th>
+<th>function</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dragging</td>
+<td>整个 <strong>Tree</strong> 是否处于拖拽状态</td>
+</tr>
+<tr>
+<td>dragNodeKeys</td>
+<td>被拖拽所有节点的keys</td>
+</tr>
+</tbody></table>
+<p>下面代码是整个事件的交付流程，总共涉及3个文件</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// TreeNode.js</span></span><br><span class="line"><span class="comment">// onDragStart处理函数</span></span><br><span class="line"><span class="keyword">const</span> onDragStart = <span class="function">(<span class="params">e</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 从context取出方法</span></span><br><span class="line">    <span class="keyword">const</span> &#123; onNodeDragStart &#125; = treeContext;</span><br><span class="line">    e.stopPropagation();</span><br><span class="line">    onNodeDragStart(e, &#123; ...props, <span class="attr">ref</span>: nodeRef &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 让drag生效</span></span><br><span class="line">    e.dataTransfer.setData(<span class="string">&#x27;text/plain&#x27;</span>, <span class="string">&#x27;&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Tree.js</span></span><br><span class="line"><span class="comment">// 委托给foundation处理，该函数注入到treeContext中</span></span><br><span class="line"><span class="function"><span class="title">onNodeDragStart</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.foundation.handleNodeDragStart(e, treeNode);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// TreeFoundation.js</span></span><br><span class="line"><span class="function"><span class="title">handleNodeDragStart</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; keyEntities &#125; = <span class="built_in">this</span>.getStates() || &#123;&#125;;</span><br><span class="line">    <span class="keyword">const</span> &#123; eventKey &#125; = treeNode;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 设置正在拖拽的node</span></span><br><span class="line">    <span class="built_in">this</span>._adapter.setDragNode(treeNode);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 设置拖拽状态，保存需要拖拽的节点</span></span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">dragging</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">dragNodeKeys</span>: getDragNodeKeys(eventKey, keyEntities)</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p><strong>getDragNodeKeys</strong> 函数的作用是获取节点所有 <strong>children</strong> 的 <strong>key</strong> ，也包括其自身。而因为发现该函数和 <strong>getMotionKeys</strong> 都有遍历节点 <strong>children</strong> 的行为，所以单独把该段逻辑抽取出来，写成 <strong>traverseChildren</strong> </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">getDragNodeKeys</span>(<span class="params">eventKey, keyEntities</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> res = <span class="keyword">new</span> <span class="built_in">Set</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> getChildrenKeys = <span class="function">(<span class="params">child</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> &#123; key &#125; = child;</span><br><span class="line">        res.add(key);</span><br><span class="line">        traverseChildren(keyEntities[key], getChildrenKeys);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    res.add(eventKey);</span><br><span class="line">    traverseChildren(keyEntities[eventKey], getChildrenKeys);</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">traverseChildren</span>(<span class="params">treeNode, callback</span>) </span>&#123;</span><br><span class="line">    treeNode &amp;&amp; treeNode.children &amp;&amp;</span><br><span class="line">        treeNode.children.forEach(<span class="function"><span class="params">child</span> =&gt;</span> &#123;</span><br><span class="line">            callback(child);</span><br><span class="line">        &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="onDragEnter"><a href="#onDragEnter" class="headerlink" title="onDragEnter"></a>onDragEnter</h2><p>该事件的对象不再是被拖拽的节点，而是拖拽的目标位置，因此又有新的状态需要记录：</p>
+<table>
+<thead>
+<tr>
+<th>state</th>
+<th>function</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dragOverNodeKey</td>
+<td>当前拖拽到的节点 <strong>key</strong></td>
+</tr>
+<tr>
+<td>dropPosition</td>
+<td>关于 <strong>dragOverNode</strong> 的位置，1表示上面，-1表示下面，0表示节点内部</td>
+</tr>
+</tbody></table>
+<p>而整个事件处理过程主要分为如下几步：</p>
+<ol>
+<li>通过 <strong>dragNodeKeys</strong> 判断，如果当前的 <strong>dragOverNodeKey</strong> 为被拖拽目标，那么直接 <strong>return</strong> ，并清空上述的两个状态</li>
+<li>使用 <strong>setTimeout</strong> 对上述两个状态进行更新，然后还需要根据 <strong>dragOverNode</strong> 对节点进行展开，该逻辑在上一次 <strong>onNodeExpand</strong> 函数里已经实现过一次了，所以进行复用即可</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">handNodeDragEnter</span>(<span class="params">e, treeNode, dragNode</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; dragging, dragNodeKeys &#125; = <span class="built_in">this</span>.getStates() || &#123;&#125;;</span><br><span class="line">    <span class="keyword">const</span> &#123; eventKey, pos &#125; = treeNode;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 计算相对位置</span></span><br><span class="line">    <span class="keyword">const</span> dropPosition = calcDropRelativePosition(e, treeNode);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 如果仍是该节点，return</span></span><br><span class="line">    <span class="keyword">if</span> (!dragNode &amp;&amp; dragNodeKeys.has(eventKey))</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 如果为自身，清空</span></span><br><span class="line">    <span class="keyword">if</span> (dragNode.eventKey === eventKey &amp;&amp; dropPosition === <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">            <span class="attr">dragOverNodeKey</span>: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">            <span class="attr">dropPosition</span>: <span class="literal">null</span></span><br><span class="line">        &#125;)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 3. 更新</span></span><br><span class="line">    <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">            <span class="attr">dragOverNodeKey</span>: eventKey,</span><br><span class="line">            dropPosition</span><br><span class="line">        &#125;)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">this</span>.delayDragEnterLogic)</span><br><span class="line">            <span class="built_in">this</span>.delayDragEnterLogic = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 清空之前的expand状态</span></span><br><span class="line">        <span class="built_in">Object</span>.keys(<span class="built_in">this</span>.delayDragEnterLogic).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="built_in">clearTimeout</span>(<span class="built_in">this</span>.delayDragEnterLogic[key]);</span><br><span class="line">        &#125;)</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 展开</span></span><br><span class="line">        <span class="built_in">this</span>.delayDragEnterLogic[pos] = <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (!dragging || treeNode.expanded)</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">this</span>.setExpandedStatus(treeNode);</span><br><span class="line">        &#125;, <span class="number">400</span>);</span><br><span class="line">    &#125;, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>按照我的理解，在这里使用 <strong>setTimeout</strong> 是因为用户拖拽动作可能很快，频繁触发 <strong>onDragEnter</strong> 会导致 <strong>expand</strong> 工作立刻执行，造成页面闪动。把逻辑放入 <strong>宏任务</strong> 里，让取消之前的 <strong>expand</strong> 工作成为了可能。</p>
+<p><strong>calcDropRelativePosition</strong> 函数则是计算当前拖拽位置相对于 <strong>dragOverNode</strong> 在哪里的函数，按照 <strong>semi design</strong> 源码的逻辑，设置了阈值为 <strong>0.4</strong> ：</p>
+<ol>
+<li><strong>[0 - 0.4] * height</strong> ：处于节点上面 </li>
+<li><strong>[0.4 - 0.6] * height</strong> ：处于节点内部</li>
+<li><strong>[0.6 - 1.0] * height</strong> ：处于节点下面</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">calcDropRelativePosition</span>(<span class="params">event, treeNode</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; clientY &#125; = event;</span><br><span class="line">    <span class="keyword">const</span> &#123; top, bottom, height &#125; = treeNode.ref.current.getBoundingClientRect();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> DRAG_OFFSET = <span class="number">0.4</span>;</span><br><span class="line">    <span class="keyword">if</span> (clientY &lt;= top + height * DRAG_OFFSET)</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (clientY &gt;= bottom - height * DRAG_OFFSET)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="onDragOver"><a href="#onDragOver" class="headerlink" title="onDragOver"></a>onDragOver</h2><p>该事件的处理函数比较简单，因为拖拽对象未离开 <strong>dragOverNode</strong> ，所以只需要更新 <strong>dropPosition</strong> 即可：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">handleNodeDragOver</span>(<span class="params">e, treeNode, dragNode</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; dropPosition, dragOverNodeKey &#125; = <span class="built_in">this</span>._adapter.getStates() || &#123;&#125;;</span><br><span class="line">    <span class="keyword">const</span> &#123; eventKey &#125; = treeNode;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (dragNode &amp;&amp; dragOverNodeKey === eventKey) &#123;</span><br><span class="line">        <span class="keyword">const</span> newPos = calcDropRelativePosition(e, treeNode);</span><br><span class="line">        <span class="keyword">if</span> (dropPosition === newPos)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">            <span class="attr">dropPosition</span>: newPos</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="onDragLeave"><a href="#onDragLeave" class="headerlink" title="onDragLeave"></a>onDragLeave</h2><p>该事件意味着离开了 <strong>dragOverNode</strong> ，所以需要把该状态清空：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">handleNodeDragLeave</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">dragOverNodeKey</span>: <span class="string">&#x27;&#x27;</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="onDragEnd"><a href="#onDragEnd" class="headerlink" title="onDragEnd"></a>onDragEnd</h2><p>该事件意味着拖拽结束了，对象是 <strong>dragNode</strong> 。函数会将包括 <strong>dragOverNodeKey</strong> 等状态清空。至于最后的 <strong>treeData</strong> 状态整理，会交由 <strong>onDrop</strong> 处理，所以此时大部分关于 <strong>drag</strong> 的状态已清空。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">handleNodeDragEnd</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">dragOverNodeKey</span>: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">        <span class="attr">dragging</span>: <span class="literal">false</span></span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="built_in">this</span>._adapter.setDragNode(<span class="literal">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="onDrop"><a href="#onDrop" class="headerlink" title="onDrop"></a>onDrop</h2><p>该事件为某拖拽目标落到了某个元素上，事件的对象是该元素。此时需要做最后一步工作，就是根据拖拽结果整理新的 <strong>treeData</strong> 并重新渲染。而 <strong>semi design</strong> 内部没有这一部分逻辑，那是因为他将处理权交给了用户，在 <strong>storybook</strong> 里可以看见传入的 <strong>onDrop</strong> 函数，代表最一般的 <strong>treeData</strong> 整理逻辑。</p>
+<p>在这里把逻辑写在了 <strong>updateTreeDataAfterDrop</strong> 函数里：</p>
+<ol>
+<li>对 <strong>treeData</strong> 进行拷贝，找到 <strong>dragNode</strong> 的位置，在拷贝数组里删除，保存到另外一个变量 <strong>dragObj</strong> 里</li>
+<li>判断 <strong>dragNode</strong> 是否落入 <strong>node</strong> 内部，如果是，那么直接在 <strong>node.children</strong> 末尾添加 <strong>dragObj</strong> 即可</li>
+<li>然后判断是否落入 <strong>node</strong> 的底部，以及 <strong>node</strong> 是否展开，如果是，那么将 <strong>dragObj</strong> 放入 <strong>node.children</strong> 的第一位</li>
+<li>最后根据 <strong>dragPosition</strong> 放入 <strong>node</strong> 的前一位或者后一位</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">updateTreeDataAfterDrop</span>(<span class="params">dragToGap, node, dragNode</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; treeData &#125; = <span class="built_in">this</span>.getStates() || &#123;&#125;;</span><br><span class="line">    <span class="keyword">const</span> nodeKey = node.eventKey;</span><br><span class="line">    <span class="keyword">const</span> dragKey = dragNode.eventKey;</span><br><span class="line">    <span class="keyword">const</span> res = [...treeData];</span><br><span class="line">    <span class="keyword">const</span> loop = <span class="function">(<span class="params">data, key, callback</span>) =&gt;</span> &#123;</span><br><span class="line">        data.forEach(<span class="function">(<span class="params">item, ind, arr</span>) =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (item.key === key)</span><br><span class="line">                callback(item, ind, arr);</span><br><span class="line">            <span class="keyword">if</span> (item.children)</span><br><span class="line">                loop(item.children, key, callback);</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (nodeKey === dragKey)</span><br><span class="line">        <span class="keyword">return</span> res;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 删除移动节点的原来位置</span></span><br><span class="line">    <span class="keyword">let</span> dragObj;</span><br><span class="line">    loop(res, dragKey, <span class="function">(<span class="params">item, ind, arr</span>) =&gt;</span> &#123;</span><br><span class="line">        dragObj = item;</span><br><span class="line">        arr.splice(ind, <span class="number">1</span>);</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 刚好放入节点内</span></span><br><span class="line">    <span class="keyword">if</span> (!dragToGap) &#123;</span><br><span class="line">        loop(res, nodeKey, <span class="function">(<span class="params">item, ind, arr</span>) =&gt;</span> &#123;</span><br><span class="line">            item.children = item.children || [];</span><br><span class="line">            item.children.push(dragObj);</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="comment">// 3. 放到节点的children第一个</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (dragToGap === <span class="number">1</span> &amp;&amp; node.expanded &amp;&amp; node.children) &#123;</span><br><span class="line">        loop(res, nodeKey, <span class="function">(<span class="params">item, ind, arr</span>) =&gt;</span> &#123;</span><br><span class="line">            item.children = item.children || [];</span><br><span class="line">            item.children.unshift(dragNode);</span><br><span class="line">        &#125;)</span><br><span class="line">        <span class="comment">// 4. 放入上一位或下一位</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        loop(res, nodeKey, <span class="function">(<span class="params">item, ind, arr</span>) =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (dragToGap === -<span class="number">1</span>)</span><br><span class="line">                arr.splice(ind, <span class="number">0</span>, dragObj);</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                arr.splice(ind + <span class="number">1</span>, <span class="number">0</span>, dragObj);</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">handleNodeDrop</span>(<span class="params">e, treeNode, dragNode</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">dragOverNodeKey</span>: <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">        <span class="attr">dragging</span>: <span class="literal">false</span></span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> &#123; dropPosition &#125; = <span class="built_in">this</span>.getStates();</span><br><span class="line">    <span class="keyword">const</span> dragToGap = dropPosition !== <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">const</span> newTreeData = <span class="built_in">this</span>.updateTreeDataAfterDrop(dragToGap, treeNode, dragNode);</span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">treeData</span>: newTreeData</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>._adapter.setDragNode(<span class="literal">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="cls"><a href="#cls" class="headerlink" title="cls"></a>cls</h1><p>前面的工作已经完成了拖拽的全部逻辑，但是在一开始提到，还要为用户提供良好的用户体验，特别是把 <strong>dropPosition</strong> 这个状态利用好，使得用户知道当前拖拽的结果。</p>
+<p>实现起来也很简单，把 <strong>dropPosition</strong> 和 <strong>dragOverNodeKey</strong> 放入 <strong>Context</strong> 里，那么 <strong>TreeNode</strong> 就能拿到这两个状态变量。然后分情况讨论一下是否需要添加 <strong>border-bottom</strong> 或者 <strong>border-top</strong> ，利用 <strong>classnames</strong> 这个库为各个 <strong>TreeNode</strong> 添加 <strong>className</strong> 即可：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// TreeNode.js</span></span><br><span class="line"><span class="keyword">const</span> &#123; dropPosition, dragOverNodeKey &#125; = treeContext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> PREFIX = <span class="string">&#x27;tree-node&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> isDragOver = dragOverNodeKey === eventKey</span><br><span class="line"><span class="keyword">const</span> classNames = cls(PREFIX, <span class="string">`<span class="subst">$&#123;PREFIX&#125;</span>-level-<span class="subst">$&#123;level&#125;</span>`</span>, &#123;</span><br><span class="line">    [<span class="string">`<span class="subst">$&#123;PREFIX&#125;</span>-bottom`</span>]: isDragOver &amp;&amp; dropPosition === <span class="number">1</span>,</span><br><span class="line">    [<span class="string">`<span class="subst">$&#123;PREFIX&#125;</span>-top`</span>]: isDragOver &amp;&amp; dropPosition === -<span class="number">1</span>,</span><br><span class="line">    [<span class="string">`<span class="subst">$&#123;PREFIX&#125;</span>-in`</span>]: isDragOver &amp;&amp; dropPosition === <span class="number">0</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.tree-node-top</span> &#123;</span><br><span class="line">    <span class="attribute">border-top</span>: <span class="number">#3498db</span> solid <span class="number">1px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.tree-node-bottom</span> &#123;</span><br><span class="line">    <span class="attribute">border-bottom</span>: <span class="number">#3498db</span> solid <span class="number">1px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.tree-node-in</span> &#123;</span><br><span class="line">    <span class="attribute">border</span>: <span class="number">#3498db</span> solid <span class="number">1px</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>此次实践在上一次的 <strong>Tree树形控件</strong> 上添加了拖拽功能，通过阅读 <strong>semi design</strong> 的源码又收获了不少：</p>
+<ol>
+<li><strong>draggable api</strong> 和 <strong>onDragStart</strong> 等事件 应该如何应用</li>
+<li><strong>calcDropRelativePosition</strong> 函数里计算当前拖拽目标相对位置的技巧</li>
+<li>通过 <strong>dropPosition</strong> 的运用在 <strong>updateTreeDataAfterDrop</strong> 高效处理节点移动情况</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5/" rel="tag"># 组件实践</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/" rel="prev" title="源码实践 - axios">
+      <i class="fa fa-chevron-left"></i> 源码实践 - axios
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#preview"><span class="nav-number">1.</span> <span class="nav-text">preview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#draggable"><span class="nav-number">2.</span> <span class="nav-text">draggable</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#F-A"><span class="nav-number">3.</span> <span class="nav-text">F &#x2F; A</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#onDragStart"><span class="nav-number">3.1.</span> <span class="nav-text">onDragStart</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onDragEnter"><span class="nav-number">3.2.</span> <span class="nav-text">onDragEnter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onDragOver"><span class="nav-number">3.3.</span> <span class="nav-text">onDragOver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onDragLeave"><span class="nav-number">3.4.</span> <span class="nav-text">onDragLeave</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onDragEnd"><span class="nav-number">3.5.</span> <span class="nav-text">onDragEnd</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#onDrop"><span class="nav-number">3.6.</span> <span class="nav-text">onDrop</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cls"><span class="nav-number">4.</span> <span class="nav-text">cls</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Ken-HH24" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

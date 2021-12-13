@@ -150,6 +150,107 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" class="post-title-link" itemprop="url">组件实践 - DraggableTree可拖拽树形控件</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-12-13 14:19:11 / Modified: 15:42:17" itemprop="dateCreated datePublished" datetime="2021-12-13T14:19:11+08:00">2021-12-13</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>在上一次组件实践中模仿了 <strong>semi design</strong> 完成了 <strong>Tree树形控件</strong> 的基本功能。在这基础上可以添加许多额外功能，比如 <strong>select</strong> ，<strong>checkbox</strong> 的支持。但是这些都稍显简单了，基本思路就是在 <strong>TreeNode</strong> 里添加相应的事件监听，然后根据 <strong>F / A</strong> 架构在 <strong>TreeFoundation.js</strong> 里书写逻辑，添加对应的 <strong>selectedKeys</strong> 或者 <strong>checkedKeys</strong> 即可。</p>
+<p>而拖拽功能在如今前端里应用得很广泛，<strong>semi design</strong> 在 <strong>Tree树形控件</strong> 里也集成了该功能。在我看来，实现的难点主要为：</p>
+<ol>
+<li>在拖拽事件结束后，原节点顺序被打乱，如何快速得到新的节点顺序是关键</li>
+<li>如何在拖拽的过程中提供较良好的用户体验，比如在用户拖动到文件夹上时，该结构会自动展开。又或者添加适当的提醒让用户知道现在的拖拽结果</li>
+</ol>
+<p>而以上问题都在阅读 <strong>semi design</strong> 源码，并自己动手实践后得到解决。</p>
+<hr>
+<h1 id="draggable"><a href="#draggable" class="headerlink" title="draggable"></a>draggable</h1><p>首先要达到可拖拽的效果，就需要使用 <strong>draggable</strong> 这个 <strong>API</strong> ，首先需要显式地在标签里添加 <strong>draggable = ‘true’</strong> 而不能只写 <strong>draggable</strong> 。</p>
+<p>然后为每个 <strong>TreeNode</strong> 添加 <strong>onDragStart</strong> ， <strong>onDragEnter</strong> 等事件。其中在 <strong>onDragStart</strong> 事件中，需要特别地调用 <code>e.dataTransfer.setData(&#39;text/plain&#39;, &#39;&#39;);</code> ，否则在某些浏览器内不会生效。另外在拖拽 <strong>&lt;li&gt;</strong> 标签的过程中会发现鼠标状态一直是一个禁止的图标，非常影响用户体验，要解决这个问题则需要在其他 <strong>drag</strong> 事件中添加 <code>e.dataTransfer.dropEffect = &#39;move&#39;;</code> ，改为移动图标。</p>
+<hr>
+<h1 id="F-A"><a href="#F-A" class="headerlink" title="F / A"></a>F / A</h1><p>首先依然是贯彻 <strong>semi design</strong> 的 <strong>F / A</strong> 架构，将整个事件的处理逻辑放在 <strong>TreeFoundation.js</strong> 中，然后将对应的事件处理函数放入 <strong>Context</strong> ， <strong>TreeNode</strong> 只负责调用即可。</p>
+<h2 id="onDragStart"><a href="#onDragStart" class="headerlink" title="onDragStart"></a>onDragStart</h2><p>在拖拽的最开始，需要做的事情主要有两步：</p>
+<ol>
+<li>记录被拖拽的节点</li>
+<li>更新 <strong>Tree</strong> 状态</li>
+</ol>
+<p>主要涉及以下状态：</p>
+<table>
+<thead>
+<tr>
+<th>state</th>
+<th>function</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>dragging</td>
+<td>整个 <strong>Tree</strong> 是否处于拖拽状态</td>
+</tr>
+<tr>
+<td>dragNodeKeys</td>
+<td>被拖拽所有节点的keys</td>
+</tr>
+</tbody></table>
+<p>下面代码是整个事件的交付流程，总共涉及3个文件</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// TreeNode.js</span></span><br><span class="line"><span class="comment">// onDragStart处理函数</span></span><br><span class="line"><span class="keyword">const</span> onDragStart = <span class="function">(<span class="params">e</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 从context取出方法</span></span><br><span class="line">    <span class="keyword">const</span> &#123; onNodeDragStart &#125; = treeContext;</span><br><span class="line">    e.stopPropagation();</span><br><span class="line">    onNodeDragStart(e, &#123; ...props, <span class="attr">ref</span>: nodeRef &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 让drag生效</span></span><br><span class="line">    e.dataTransfer.setData(<span class="string">&#x27;text/plain&#x27;</span>, <span class="string">&#x27;&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Tree.js</span></span><br><span class="line"><span class="comment">// 委托给foundation处理，该函数注入到treeContext中</span></span><br><span class="line"><span class="function"><span class="title">onNodeDragStart</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.foundation.handleNodeDragStart(e, treeNode);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// TreeFoundation.js</span></span><br><span class="line"><span class="function"><span class="title">handleNodeDragStart</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; keyEntities &#125; = <span class="built_in">this</span>.getStates() || &#123;&#125;;</span><br><span class="line">    <span class="keyword">const</span> &#123; eventKey &#125; = treeNode;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 设置正在拖拽的node</span></span><br><span class="line">    <span class="built_in">this</span>._adapter.setDragNode(treeNode);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 设置拖拽状态，保存需要拖拽的节点</span></span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">dragging</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">dragNodeKeys</span>: getDragNodeKeys(eventKey, keyEntities)</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -854,81 +955,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/22/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-router/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/22/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-router/" class="post-title-link" itemprop="url">源码实践 - react-router</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-11-22 21:03:48" itemprop="dateCreated datePublished" datetime="2021-11-22T21:03:48+08:00">2021-11-22</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 10:11:23" itemprop="dateModified" datetime="2021-12-10T10:11:23+08:00">2021-12-10</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="BrowserRouter"><a href="#BrowserRouter" class="headerlink" title="BrowserRouter"></a>BrowserRouter</h1><h2 id="history-amp-location"><a href="#history-amp-location" class="headerlink" title="history &amp; location"></a>history &amp; location</h2><p><strong>react-router</strong> 库中的 <strong>BrowserRouter</strong> 是利用 <strong>history</strong> 这个 <strong>api</strong> ，通过监听 <strong>popstate</strong> 动作实现的。</p>
-<p><strong>history</strong> 对象可以利用 <strong>createBrowserHistory()</strong> 这个方法获取，然后用 <strong>useMemo</strong> 缓存起来。</p>
-<p><strong>location</strong> 则使用 <strong>useState</strong> 保存，方便进行监听变化后重新触发渲染。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> history = useMemo(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    rootHistory = createBrowserHistory();</span><br><span class="line">    <span class="keyword">return</span> rootHistory;</span><br><span class="line">&#125;, []);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> [location, setLocation] = useState(history.location);</span><br><span class="line"></span><br><span class="line">useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 注册监听，返回一个移除监听函数</span></span><br><span class="line">    <span class="keyword">const</span> unlisten = history.listen(<span class="function">(<span class="params">history</span>) =&gt;</span> &#123;</span><br><span class="line">        setLocation(history.location);</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 移除监听</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        unlisten &amp;&amp; unlisten();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, []);</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/22/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-router/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -998,7 +1024,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">13</span>
+          <span class="site-state-item-count">14</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
