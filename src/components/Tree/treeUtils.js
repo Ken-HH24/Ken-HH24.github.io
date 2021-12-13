@@ -6,7 +6,7 @@ export function flattenTreeData(treeNodeList, expandedKeys) {
     const flattenList = [];
 
     const flatten = (list, parent = null) => {
-        return list.map((treeNode, index) => {
+        return (list || []).map((treeNode, index) => {
             const flattenNode = {
                 ...treeNode,
                 pos: getPosition(parent ? parent.pos : '0', index),
@@ -108,16 +108,47 @@ export function getTreeNodeProps(treeNode, treeState) {
 export function getMotionKeys(eventKey, expandedKeys, keyEntities = {}) {
     const res = new Set();
 
-    const getChild = (propsKey) => {
-        keyEntities[propsKey] && keyEntities[propsKey].children
-            && keyEntities[propsKey].children.forEach(treeNode => {
-                const { key } = treeNode;
-                res.add(key);
-                if (expandedKeys.has(key))
-                    getChild(key);
-            })
+    const getChild = (child) => {
+        const { key } = child;
+        res.add(key);
+        if (expandedKeys.has(key))
+            traverseChildren(keyEntities[key], getChild);
+    }
+    traverseChildren(keyEntities[eventKey], getChild)
+    return res;
+}
+
+export function getDragNodeKeys(eventKey, keyEntities) {
+    const res = new Set();
+
+    const getChildrenKeys = (child) => {
+        const { key } = child;
+        res.add(key);
+        traverseChildren(keyEntities[key], getChildrenKeys);
     }
 
-    getChild(eventKey);
+    res.add(eventKey);
+    traverseChildren(keyEntities[eventKey], getChildrenKeys);
     return res;
+}
+
+export function traverseChildren(treeNode, callback) {
+    treeNode && treeNode.children &&
+        treeNode.children.forEach(child => {
+            callback(child);
+        })
+}
+
+export function calcDropRelativePosition(event, treeNode) {
+    const { clientY } = event;
+    const { top, bottom, height } = treeNode.ref.current.getBoundingClientRect();
+
+    const DRAG_OFFSET = 0.4;
+    if (clientY <= top + height * DRAG_OFFSET)
+        return -1;
+
+    if (clientY >= bottom - height * DRAG_OFFSET)
+        return 1;
+
+    return 0;
 }

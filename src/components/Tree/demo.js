@@ -44,7 +44,7 @@ const treeData = [
 ];
 
 const TreeDemo = () => {
-    return <Tree treeData={treeData} />
+    return <Tree draggable treeData={treeData} />
 }
 
 export default TreeDemo;
