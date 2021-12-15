@@ -11,8 +11,13 @@ import (
 )
 
 func LoginHandler(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
+	// 前端通过json传输数据
+	body, _ := c.GetRawData()
+	var form map[string]interface{}
+	_ = json.Unmarshal(body, &form)
+
+	username := form["username"].(string)
+	password := form["password"].(string)
 
 	user, result := Service.FindUserByName(username)
 
@@ -31,8 +36,12 @@ func LoginHandler(c *gin.Context) {
 }
 
 func SignUpHandler(c *gin.Context) {
-	username := c.PostForm("username")
-	password := c.PostForm("password")
+	body, _ := c.GetRawData()
+	var form map[string]interface{}
+	_ = json.Unmarshal(body, &form)
+
+	username := form["username"].(string)
+	password := form["password"].(string)
 
 	_, result := Service.FindUserByName(username)
 
