@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { JWT_TOKEN } from './_app';
 import Router from 'next/router';
 import { useRef } from 'react';
 import { useMutation } from 'react-query';
@@ -24,10 +23,11 @@ const Login = () => {
             const user = JSON.parse(data.user);
 
             // jwt token
-            window.localStorage.setItem(JWT_TOKEN, token);
+            // window.localStorage.setItem(JWT_TOKEN, token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
             // user cookie
-            setCookie('user', data.user, {
+            setCookie('token', token, {
                 path: '/',
                 maxAge: 60 * 60 * 24,
                 sameSite: true

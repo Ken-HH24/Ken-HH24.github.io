@@ -1,25 +1,28 @@
-import { JWT_TOKEN } from './_app'
 import Router from 'next/router'
 import { parseCookies } from '../helpers'
 import Link from 'next/link';
 import { useCookies } from 'react-cookie';
+import axios from 'axios';
 
-export const getServerSideProps = ({ req }) => {
-  const data = parseCookies(req);
-  const user = data.user;
+export const getServerSideProps = async ({ req }) => {
+  try {
+    const { token } = parseCookies(req);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const res = await axios.get('http://127.0.0.1:8080/user/info');
+    const user = res.data.user;
 
-  if (!user) {
+    return {
+      props: {
+        user: JSON.parse(user)
+      }
+    }
+  } catch (err) {
+    console.log(err);
     return {
       redirect: {
         destination: '/login',
         permanent: false,
       }
-    }
-  }
-
-  return {
-    props: {
-      user: JSON.parse(user)
     }
   }
 }
@@ -28,7 +31,7 @@ export default function Home({ user }) {
   const [, , removeCookie] = useCookies(['user']);
 
   const handleLogOut = () => {
-    window.localStorage.removeItem(JWT_TOKEN);
+    // window.localStorage.removeItem(JWT_TOKEN);
     removeCookie('user');
     Router.push('/login');
   }

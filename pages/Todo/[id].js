@@ -26,9 +26,14 @@ const deleteTodo = async ({ id }) => {
 }
 
 export const getServerSideProps = async ({ params, req }) => {
-    const user = parseCookies(req).user;
+    let user;
 
-    if (!user) {
+    try {
+        const { token } = parseCookies(req);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const res = await axios.get('http://127.0.0.1:8080/user/info');
+        user = res.data.user;
+    } catch (err) {
         return {
             redirect: {
                 destination: '/login',
