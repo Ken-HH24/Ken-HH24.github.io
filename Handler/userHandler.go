@@ -19,18 +19,18 @@ func LoginHandler(c *gin.Context) {
 	username := form["username"].(string)
 	password := form["password"].(string)
 
-	user, result := Service.FindUserByName(username)
+	user, err := Service.FindUserByName(username)
 
-	if result.Error != nil || !Utils.PasswordVerify(password, user.Password) {
+	if err != nil || !Utils.PasswordVerify(password, user.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "username or password is not correct",
 		})
 	} else {
 		tokenString, _ := Utils.GenToken(user)
+		user, _ := json.Marshal(user)
 		c.JSON(http.StatusOK, gin.H{
-			"username": username,
-			"password": password,
-			"token":    tokenString,
+			"user":  string(user),
+			"token": tokenString,
 		})
 	}
 }
@@ -43,9 +43,9 @@ func SignUpHandler(c *gin.Context) {
 	username := form["username"].(string)
 	password := form["password"].(string)
 
-	_, result := Service.FindUserByName(username)
+	_, err := Service.FindUserByName(username)
 
-	if result.RowsAffected > 0 {
+	if err == nil {
 		c.JSON(http.StatusForbidden, gin.H{
 			"message": "username has been used",
 		})
@@ -53,20 +53,34 @@ func SignUpHandler(c *gin.Context) {
 	}
 
 	hashPassword, _ := Utils.PasswordHash(password)
-	user, result := Service.CreateUser(Model.User{
+	user, err := Service.CreateUser(Model.User{
 		Username: username,
 		Password: hashPassword,
 	})
 
-	if result.Error != nil {
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail to create the user",
 		})
 	} else {
-		data, _ := json.Marshal(user)
+		user, _ := json.Marshal(user)
 		c.JSON(http.StatusOK, gin.H{
 			"message": "create successfully",
-			"data":    data,
+			"user":    string(user),
+		})
+	}
+}
+
+func GetUserInfoHandler(c *gin.Context) {
+	user, exist := c.Get("user")
+	if !exist {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "didn't login",
+		})
+	} else {
+		user, _ := json.Marshal(user)
+		c.JSON(http.StatusOK, gin.H{
+			"user": string(user),
 		})
 	}
 }

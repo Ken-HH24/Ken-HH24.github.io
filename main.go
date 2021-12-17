@@ -1,8 +1,6 @@
 package main
 
-import (
-	"gin-practice/Route"
-)
+import "gin-practice/Route"
 
 func main() {
 	Route.InitRoute()
