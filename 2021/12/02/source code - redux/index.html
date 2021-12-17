@@ -22,18 +22,18 @@
 
   <meta name="description" content="previewredux 是著名的 JavaScript 状态管理库，翻看 github 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。  createStoredispatch既然是负责状态管理，那么 redux 就应该有一个 store 来存储数据。store 里面的数据不可直接改变，而是委托一个 dispatch 函数来完成，通过派发 action ，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="源码实践 - redux">
-<meta property="og:url" content="http://example.com/2021/12/02/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20redux/index.html">
+<meta property="og:title" content="source code - redux">
+<meta property="og:url" content="http://example.com/2021/12/02/source%20code%20-%20redux/index.html">
 <meta property="og:site_name" content="Ken&#39;s blog">
 <meta property="og:description" content="previewredux 是著名的 JavaScript 状态管理库，翻看 github 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。  createStoredispatch既然是负责状态管理，那么 redux 就应该有一个 store 来存储数据。store 里面的数据不可直接改变，而是委托一个 dispatch 函数来完成，通过派发 action ，">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-12-02T02:08:10.000Z">
-<meta property="article:modified_time" content="2021-12-10T02:11:30.099Z">
+<meta property="article:modified_time" content="2021-12-16T07:04:14.445Z">
 <meta property="article:author" content="Ken">
-<meta property="article:tag" content="源码实践">
+<meta property="article:tag" content="source code">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/2021/12/02/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20redux/">
+<link rel="canonical" href="http://example.com/2021/12/02/source%20code%20-%20redux/">
 
 
 <script id="page-configurations">
@@ -46,7 +46,7 @@
   };
 </script>
 
-  <title>源码实践 - redux | Ken's blog</title>
+  <title>source code - redux | Ken's blog</title>
   
 
 
@@ -156,7 +156,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/02/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20redux/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/02/source%20code%20-%20redux/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -169,7 +169,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          源码实践 - redux
+          source code - redux
         </h1>
 
         <div class="post-meta">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 10:11:30" itemprop="dateModified" datetime="2021-12-10T10:11:30+08:00">2021-12-10</time>
+                <time title="Modified: 2021-12-16 15:04:14" itemprop="dateModified" datetime="2021-12-16T15:04:14+08:00">2021-12-16</time>
               </span>
 
           
@@ -276,7 +276,7 @@
 
       <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5/" rel="tag"># 源码实践</a>
+              <a href="/tags/source-code/" rel="tag"># source code</a>
           </div>
 
         
@@ -285,12 +285,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/" rel="prev" title="IntersectionObserver实践">
-      <i class="fa fa-chevron-left"></i> IntersectionObserver实践
+    <a href="/2021/11/29/API%20-%20IntersectionObserver/" rel="prev" title="API - IntersectionObserver">
+      <i class="fa fa-chevron-left"></i> API - IntersectionObserver
     </a></div>
       <div class="post-nav-item">
-    <a href="/2021/12/04/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-redux/" rel="next" title="源码实践 - react-redux">
-      源码实践 - react-redux <i class="fa fa-chevron-right"></i>
+    <a href="/2021/12/04/source%20code%20-%20react-redux/" rel="next" title="source code - react-redux">
+      source code - react-redux <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -364,7 +364,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">15</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

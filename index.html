@@ -150,7 +150,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -164,7 +164,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" class="post-title-link" itemprop="url">组件实践 - DraggableTree可拖拽树形控件</a>
+            <a href="/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/" class="post-title-link" itemprop="url">Next.js & gin 入门</a>
         </h2>
 
         <div class="post-meta">
@@ -173,10 +173,104 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2021-12-13 14:19:11 / Modified: 15:42:17" itemprop="dateCreated datePublished" datetime="2021-12-13T14:19:11+08:00">2021-12-13</time>
+              <time title="Created: 2021-12-16 15:14:26" itemprop="dateCreated datePublished" datetime="2021-12-16T15:14:26+08:00">2021-12-16</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-17 11:11:08" itemprop="dateModified" datetime="2021-12-17T11:11:08+08:00">2021-12-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>最近想补一下 <strong>Next.js</strong> 和 <strong>React Query</strong> 的知识，参考了《Next.js 应用开发实践》后发现， <strong>prisma</strong> 在使用上（特别是对于mongodb，还在preview阶段）的坑实在是太多了，于是抛弃了 <strong>Next.js API Routes</strong> 的特点，转而使用了 <strong>golang</strong> 的 <strong>gin</strong> 框架。于是就有了这篇文章，在完成一个 <strong>Todo demo</strong> 过程中总结了 <strong>Next.js</strong> ， <strong>gin</strong> 和 <strong>React Query</strong> 的入门知识点。</p>
+<ul>
+<li>前端github：<a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/NextJs">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/NextJs</a></li>
+<li>后端github：<a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/go-gin">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/go-gin</a></li>
+</ul>
+<hr>
+<h1 id="login-amp-signup"><a href="#login-amp-signup" class="headerlink" title="login &amp; signup"></a>login &amp; signup</h1><p><strong>Todo demo</strong> 的第一个功能点为登录与注册</p>
+<h2 id="gin"><a href="#gin" class="headerlink" title="gin"></a>gin</h2><p>后端涉及数据库和 <strong>api</strong> 的设计，所以比较容易展开讲， <strong>gin</strong> 是一个非常轻量的 <strong>web</strong> 框架，在 <strong>golang</strong> 原生的 <strong>http</strong> 库中扩展了一系列功能</p>
+<h3 id="setup"><a href="#setup" class="headerlink" title="setup"></a>setup</h3><p>对于项目初始化的步骤是：</p>
+<ol>
+<li>创建一个文件夹，执行 <code>go mod init &lt;project name&gt;</code></li>
+<li>执行 <code>go get -u github.com/gin-gonic/gin</code> 将 <strong>gin</strong> 添加到依赖里</li>
+<li>在文件夹里创建一个 <strong>main.go</strong> 文件，第一行写上 <code>package main</code> ，书写 <strong>main</strong> 函数</li>
+<li>命令行里执行 <code>go run main.go</code></li>
+</ol>
+<p>官方例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	r := gin.Default()</span><br><span class="line">	r.GET(<span class="string">&quot;/ping&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">		c.JSON(<span class="number">200</span>, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;pong&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;)</span><br><span class="line">	r.Run() <span class="comment">// listen and serve on 0.0.0.0:8080 (for windows &quot;localhost:8080&quot;)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/13/Component%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/12/13/Component%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" class="post-title-link" itemprop="url">Component - DraggableTree可拖拽树形控件</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-12-13 14:19:11" itemprop="dateCreated datePublished" datetime="2021-12-13T14:19:11+08:00">2021-12-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-16 19:24:41" itemprop="dateModified" datetime="2021-12-16T19:24:41+08:00">2021-12-16</time>
+              </span>
 
           
 
@@ -227,7 +321,7 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// TreeNode.js</span></span><br><span class="line"><span class="comment">// onDragStart处理函数</span></span><br><span class="line"><span class="keyword">const</span> onDragStart = <span class="function">(<span class="params">e</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 从context取出方法</span></span><br><span class="line">    <span class="keyword">const</span> &#123; onNodeDragStart &#125; = treeContext;</span><br><span class="line">    e.stopPropagation();</span><br><span class="line">    onNodeDragStart(e, &#123; ...props, <span class="attr">ref</span>: nodeRef &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 让drag生效</span></span><br><span class="line">    e.dataTransfer.setData(<span class="string">&#x27;text/plain&#x27;</span>, <span class="string">&#x27;&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Tree.js</span></span><br><span class="line"><span class="comment">// 委托给foundation处理，该函数注入到treeContext中</span></span><br><span class="line"><span class="function"><span class="title">onNodeDragStart</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.foundation.handleNodeDragStart(e, treeNode);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// TreeFoundation.js</span></span><br><span class="line"><span class="function"><span class="title">handleNodeDragStart</span>(<span class="params">e, treeNode</span>)</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; keyEntities &#125; = <span class="built_in">this</span>.getStates() || &#123;&#125;;</span><br><span class="line">    <span class="keyword">const</span> &#123; eventKey &#125; = treeNode;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 设置正在拖拽的node</span></span><br><span class="line">    <span class="built_in">this</span>._adapter.setDragNode(treeNode);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. 设置拖拽状态，保存需要拖拽的节点</span></span><br><span class="line">    <span class="built_in">this</span>._adapter.updateState(&#123;</span><br><span class="line">        <span class="attr">dragging</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">dragNodeKeys</span>: getDragNodeKeys(eventKey, keyEntities)</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/12/13/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/#more" rel="contents">
+              <a class="btn" href="/2021/12/13/Component%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -251,7 +345,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/10/source%20code%20-%20axios/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -265,7 +359,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/" class="post-title-link" itemprop="url">源码实践 - axios</a>
+            <a href="/2021/12/10/source%20code%20-%20axios/" class="post-title-link" itemprop="url">source code - axios</a>
         </h2>
 
         <div class="post-meta">
@@ -274,10 +368,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2021-12-10 10:23:18 / Modified: 14:59:50" itemprop="dateCreated datePublished" datetime="2021-12-10T10:23:18+08:00">2021-12-10</time>
+              <time title="Created: 2021-12-10 10:23:18" itemprop="dateCreated datePublished" datetime="2021-12-10T10:23:18+08:00">2021-12-10</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-16 15:03:34" itemprop="dateModified" datetime="2021-12-16T15:03:34+08:00">2021-12-16</time>
+              </span>
 
           
 
@@ -300,7 +400,7 @@
 <hr>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/12/10/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20axios/#more" rel="contents">
+              <a class="btn" href="/2021/12/10/source%20code%20-%20axios/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -324,7 +424,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/08/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/08/Component%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -338,7 +438,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/12/08/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" class="post-title-link" itemprop="url">组件实践 - Tree树形控件</a>
+            <a href="/2021/12/08/Component%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" class="post-title-link" itemprop="url">Component - Tree树形控件</a>
         </h2>
 
         <div class="post-meta">
@@ -355,7 +455,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 15:00:56" itemprop="dateModified" datetime="2021-12-10T15:00:56+08:00">2021-12-10</time>
+                <time title="Modified: 2021-12-16 19:24:29" itemprop="dateModified" datetime="2021-12-16T19:24:29+08:00">2021-12-16</time>
               </span>
 
           
@@ -382,7 +482,7 @@
 <hr>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/12/08/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/#more" rel="contents">
+              <a class="btn" href="/2021/12/08/Component%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -406,7 +506,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/04/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-redux/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/04/source%20code%20-%20react-redux/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -420,7 +520,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/12/04/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-redux/" class="post-title-link" itemprop="url">源码实践 - react-redux</a>
+            <a href="/2021/12/04/source%20code%20-%20react-redux/" class="post-title-link" itemprop="url">source code - react-redux</a>
         </h2>
 
         <div class="post-meta">
@@ -437,7 +537,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 10:11:18" itemprop="dateModified" datetime="2021-12-10T10:11:18+08:00">2021-12-10</time>
+                <time title="Modified: 2021-12-16 15:03:46" itemprop="dateModified" datetime="2021-12-16T15:03:46+08:00">2021-12-16</time>
               </span>
 
           
@@ -469,7 +569,7 @@
 <hr>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/12/04/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20react-redux/#more" rel="contents">
+              <a class="btn" href="/2021/12/04/source%20code%20-%20react-redux/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -493,7 +593,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/02/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20redux/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/02/source%20code%20-%20redux/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -507,7 +607,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/12/02/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20redux/" class="post-title-link" itemprop="url">源码实践 - redux</a>
+            <a href="/2021/12/02/source%20code%20-%20redux/" class="post-title-link" itemprop="url">source code - redux</a>
         </h2>
 
         <div class="post-meta">
@@ -524,7 +624,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 10:11:30" itemprop="dateModified" datetime="2021-12-10T10:11:30+08:00">2021-12-10</time>
+                <time title="Modified: 2021-12-16 15:04:14" itemprop="dateModified" datetime="2021-12-16T15:04:14+08:00">2021-12-16</time>
               </span>
 
           
@@ -549,7 +649,7 @@
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">createStore</span>(<span class="params">reducer, initialState</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">let</span> currentReducer = reducer;</span><br><span class="line">    <span class="keyword">let</span> currentState = initialState;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  返回当前state</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">getState</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> currentState;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  派发action，修改state</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">dispatch</span>(<span class="params">action</span>) </span>&#123;</span><br><span class="line">        currentState = currentReducer(currentState, action);</span><br><span class="line">        <span class="keyword">return</span> currentState;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">        dispatch,</span><br><span class="line">        getState,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/12/02/%E6%BA%90%E7%A0%81%E5%AE%9E%E8%B7%B5%20-%20redux/#more" rel="contents">
+              <a class="btn" href="/2021/12/02/source%20code%20-%20redux/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -573,7 +673,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/29/API%20-%20IntersectionObserver/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -587,7 +687,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/" class="post-title-link" itemprop="url">IntersectionObserver实践</a>
+            <a href="/2021/11/29/API%20-%20IntersectionObserver/" class="post-title-link" itemprop="url">API - IntersectionObserver</a>
         </h2>
 
         <div class="post-meta">
@@ -604,7 +704,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-09 10:02:43" itemprop="dateModified" datetime="2021-12-09T10:02:43+08:00">2021-12-09</time>
+                <time title="Modified: 2021-12-16 15:11:16" itemprop="dateModified" datetime="2021-12-16T15:11:16+08:00">2021-12-16</time>
               </span>
 
           
@@ -627,7 +727,7 @@
 <figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> IntersectionObserverCallback &#123;</span><br><span class="line">    (entries: IntersectionObserverEntry[], <span class="attr">observer</span>: IntersectionObserver): <span class="built_in">void</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> IntersectionObserverEntry &#123;</span><br><span class="line">    <span class="keyword">readonly</span> boundingClientRect: DOMRectReadOnly;</span><br><span class="line">    <span class="keyword">readonly</span> intersectionRatio: <span class="built_in">number</span>;</span><br><span class="line">    <span class="keyword">readonly</span> intersectionRect: DOMRectReadOnly;</span><br><span class="line">    <span class="keyword">readonly</span> isIntersecting: <span class="built_in">boolean</span>;</span><br><span class="line">    <span class="keyword">readonly</span> rootBounds: DOMRectReadOnly | <span class="literal">null</span>;</span><br><span class="line">    <span class="keyword">readonly</span> target: Element;</span><br><span class="line">    <span class="keyword">readonly</span> time: DOMHighResTimeStamp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/11/29/IntersectionObserver%E5%AE%9E%E8%B7%B5/#more" rel="contents">
+              <a class="btn" href="/2021/11/29/API%20-%20IntersectionObserver/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -651,7 +751,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/27/fre%20source%20code%20-%20reconcile%E7%AF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -665,7 +765,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/" class="post-title-link" itemprop="url">fre源码阅读 - reconcile篇</a>
+            <a href="/2021/11/27/fre%20source%20code%20-%20reconcile%E7%AF%87/" class="post-title-link" itemprop="url">fre source code - reconcile篇</a>
         </h2>
 
         <div class="post-meta">
@@ -682,7 +782,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-28 09:18:13" itemprop="dateModified" datetime="2021-11-28T09:18:13+08:00">2021-11-28</time>
+                <time title="Modified: 2021-12-16 15:11:38" itemprop="dateModified" datetime="2021-12-16T15:11:38+08:00">2021-12-16</time>
               </span>
 
           
@@ -702,7 +802,7 @@
 <hr>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/11/27/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20reconcile%E7%AF%87/#more" rel="contents">
+              <a class="btn" href="/2021/11/27/fre%20source%20code%20-%20reconcile%E7%AF%87/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -726,7 +826,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Modal%E5%BC%B9%E7%AA%97/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -740,7 +840,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/11/26/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Modal%E5%BC%B9%E7%AA%97/" class="post-title-link" itemprop="url">组件实践 - Modal弹窗</a>
+            <a href="/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/" class="post-title-link" itemprop="url">Component - Modal弹窗</a>
         </h2>
 
         <div class="post-meta">
@@ -757,7 +857,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 10:11:44" itemprop="dateModified" datetime="2021-12-10T10:11:44+08:00">2021-12-10</time>
+                <time title="Modified: 2021-12-16 19:25:03" itemprop="dateModified" datetime="2021-12-16T19:25:03+08:00">2021-12-16</time>
               </span>
 
           
@@ -785,7 +885,7 @@
 </ol>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/11/26/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Modal%E5%BC%B9%E7%AA%97/#more" rel="contents">
+              <a class="btn" href="/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -809,7 +909,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -823,7 +923,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/" class="post-title-link" itemprop="url">fre源码阅读 - schedule篇</a>
+            <a href="/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/" class="post-title-link" itemprop="url">fre source code - schedule篇</a>
         </h2>
 
         <div class="post-meta">
@@ -840,7 +940,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-11-27 13:40:39" itemprop="dateModified" datetime="2021-11-27T13:40:39+08:00">2021-11-27</time>
+                <time title="Modified: 2021-12-16 15:11:52" itemprop="dateModified" datetime="2021-12-16T15:11:52+08:00">2021-12-16</time>
               </span>
 
           
@@ -861,81 +961,7 @@
 <figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 源码</span></span><br><span class="line"><span class="keyword">let</span> postTask = task(<span class="literal">false</span>)</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; postTask()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 翻译后</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; <span class="built_in">Promise</span>.resolve().then(flush)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/11/26/fre%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%20-%20schedule%E7%AF%87/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/24/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Form%E8%A1%A8%E5%8D%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/24/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Form%E8%A1%A8%E5%8D%95/" class="post-title-link" itemprop="url">组件实践 - Form表单</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-11-24 16:47:48" itemprop="dateCreated datePublished" datetime="2021-11-24T16:47:48+08:00">2021-11-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-10 10:11:40" itemprop="dateModified" datetime="2021-12-10T10:11:40+08:00">2021-12-10</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>在众多组件实现中，<strong>Form</strong> 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。</p>
-<h1 id="组件形态"><a href="#组件形态" class="headerlink" title="组件形态"></a>组件形态</h1><p>为了更好表达 <strong>H5</strong> 的语义化，同时模仿 <strong>ant design</strong> 的实现，可以有以下初步的设计：每一个表单子项使用 <strong>&lt;FormItem&gt;</strong> 标签包裹，里面可以选择不同的输入项如 <strong>&lt;Input&gt;</strong> ，<strong>&lt;CheckBox&gt;</strong> 等</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">FormItem</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Input</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">FormItem</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">CheckBox</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;reset&#x27;</span> <span class="attr">value</span>=<span class="string">&#x27;reset&#x27;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;submit&#x27;</span> <span class="attr">value</span>=<span class="string">&#x27;submit&#x27;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/24/%E7%BB%84%E4%BB%B6%E5%AE%9E%E8%B7%B5%20-%20Form%E8%A1%A8%E5%8D%95/#more" rel="contents">
+              <a class="btn" href="/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -1024,7 +1050,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-count">15</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

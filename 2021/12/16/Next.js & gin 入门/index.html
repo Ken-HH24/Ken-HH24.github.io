@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="preview最近想补一下 Next.js 和 React Query 的知识，参考了《Next.js 应用开发实践》后发现， prisma 在使用上（特别是对于mongodb，还在preview阶段）的坑实在是太多了，于是抛弃了 Next.js API Routes 的特点，转而使用了 golang 的 gin 框架。于是就有了这篇文章，在完成一个 Todo demo 过程中总结了 Next.j">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Next.js &amp; gin 入门">
+<meta property="og:url" content="http://example.com/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Ken&#39;s blog">
+<meta property="og:description" content="preview最近想补一下 Next.js 和 React Query 的知识，参考了《Next.js 应用开发实践》后发现， prisma 在使用上（特别是对于mongodb，还在preview阶段）的坑实在是太多了，于是抛弃了 Next.js API Routes 的特点，转而使用了 golang 的 gin 框架。于是就有了这篇文章，在完成一个 Todo demo 过程中总结了 Next.j">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-12-16T07:14:26.000Z">
+<meta property="article:modified_time" content="2021-12-17T03:11:08.251Z">
+<meta property="article:author" content="Ken">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Next.js & gin 入门 | Ken's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ken's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Next.js & gin 入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-12-16 15:14:26" itemprop="dateCreated datePublished" datetime="2021-12-16T15:14:26+08:00">2021-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-17 11:11:08" itemprop="dateModified" datetime="2021-12-17T11:11:08+08:00">2021-12-17</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>最近想补一下 <strong>Next.js</strong> 和 <strong>React Query</strong> 的知识，参考了《Next.js 应用开发实践》后发现， <strong>prisma</strong> 在使用上（特别是对于mongodb，还在preview阶段）的坑实在是太多了，于是抛弃了 <strong>Next.js API Routes</strong> 的特点，转而使用了 <strong>golang</strong> 的 <strong>gin</strong> 框架。于是就有了这篇文章，在完成一个 <strong>Todo demo</strong> 过程中总结了 <strong>Next.js</strong> ， <strong>gin</strong> 和 <strong>React Query</strong> 的入门知识点。</p>
+<ul>
+<li>前端github：<a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/NextJs">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/NextJs</a></li>
+<li>后端github：<a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/go-gin">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/go-gin</a></li>
+</ul>
+<hr>
+<h1 id="login-amp-signup"><a href="#login-amp-signup" class="headerlink" title="login &amp; signup"></a>login &amp; signup</h1><p><strong>Todo demo</strong> 的第一个功能点为登录与注册</p>
+<h2 id="gin"><a href="#gin" class="headerlink" title="gin"></a>gin</h2><p>后端涉及数据库和 <strong>api</strong> 的设计，所以比较容易展开讲， <strong>gin</strong> 是一个非常轻量的 <strong>web</strong> 框架，在 <strong>golang</strong> 原生的 <strong>http</strong> 库中扩展了一系列功能</p>
+<h3 id="setup"><a href="#setup" class="headerlink" title="setup"></a>setup</h3><p>对于项目初始化的步骤是：</p>
+<ol>
+<li>创建一个文件夹，执行 <code>go mod init &lt;project name&gt;</code></li>
+<li>执行 <code>go get -u github.com/gin-gonic/gin</code> 将 <strong>gin</strong> 添加到依赖里</li>
+<li>在文件夹里创建一个 <strong>main.go</strong> 文件，第一行写上 <code>package main</code> ，书写 <strong>main</strong> 函数</li>
+<li>命令行里执行 <code>go run main.go</code></li>
+</ol>
+<p>官方例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	r := gin.Default()</span><br><span class="line">	r.GET(<span class="string">&quot;/ping&quot;</span>, <span class="function"><span class="keyword">func</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">		c.JSON(<span class="number">200</span>, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;pong&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;)</span><br><span class="line">	r.Run() <span class="comment">// listen and serve on 0.0.0.0:8080 (for windows &quot;localhost:8080&quot;)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<h3 id="structure"><a href="#structure" class="headerlink" title="structure"></a>structure</h3><p>直接在 <strong>main.go</strong> 里编写当然简单，但是随着代码量增多，区分模块会让项目更好地被维护。而 <strong>gin</strong> 没有给出项目结构的标准答案，参考了网上以及后期实践后，最终的项目结构如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">├── gin-practic</span><br><span class="line">│   ├──  Database</span><br><span class="line">│          └── mysql.go</span><br><span class="line">│   ├──  Handler</span><br><span class="line">│          └── userHandler.go</span><br><span class="line">│          └── todoHandler.go</span><br><span class="line">│   ├──  Middleware</span><br><span class="line">│          └── cors.go</span><br><span class="line">│          └── jwtAuthMiddleware.go</span><br><span class="line">│   ├──  Model</span><br><span class="line">│          └── Todo.go</span><br><span class="line">│          └── User.go</span><br><span class="line">│   ├──  Route</span><br><span class="line">│          └── index.go</span><br><span class="line">│          └── todoRoute.go</span><br><span class="line">│          └── userRoute.go</span><br><span class="line">│   ├──  Service</span><br><span class="line">│          └── todoService.go</span><br><span class="line">│          └── userService.go</span><br><span class="line">│   ├──  Utils</span><br><span class="line">│          └── jwtUtils.go</span><br><span class="line">│          └── passwordUtils.go</span><br><span class="line">└── main.go</span><br></pre></td></tr></table></figure>
+
+<h3 id="Database-DB"><a href="#Database-DB" class="headerlink" title="Database.DB"></a>Database.DB</h3><p>项目里使用了 <strong>mysql</strong> 数据库，工具则选择了 <strong>gorm</strong> 。在 <strong>mysql.go</strong> 里声明一个 <strong>gorm.DB</strong> 的指针对象 <strong>DB</strong> ，使其可以被其他包访问，然后编写 <strong>init</strong> 函数，该函数会在该包被引用的时候自动执行，也就自动完成了数据库连接的过程</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Database/mysql.go</span></span><br><span class="line"><span class="keyword">package</span> Database</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;gorm.io/driver/mysql&quot;</span></span><br><span class="line">	<span class="string">&quot;gorm.io/gorm&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> DB *gorm.DB</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> err error</span><br><span class="line">    <span class="comment">// username:password@tcp(127.0.0.1:3306)/database?charset=utf8mb4&amp;parseTime=True&amp;loc=Local</span></span><br><span class="line">	dsn := <span class="string">&quot;root@tcp(127.0.0.1:3306)/gin-practice?charset=utf8mb4&amp;parseTime=True&amp;loc=Local&quot;</span></span><br><span class="line">	DB, err = gorm.Open(mysql.Open(dsn), &amp;gorm.Config&#123;&#125;)</span><br><span class="line">	<span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;connected successfully&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="User"><a href="#User" class="headerlink" title="User"></a>User</h3><p>类型的定义比较简单，结合着 <strong>gorm</strong> ，可以把 <strong>gorm.Model</strong> 放入结构体内，该结构自动包含了 <strong>ID</strong> 等信息</p>
+<p>另外如果结构体内的属性对应着数据库内的一列，那么其首字母必须大写表示 <strong>public</strong> ，不然执行 <strong>DB.AutoMigrate()</strong> 的时候不会为该属性创建对应的列</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> Model</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;gorm.io/gorm&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">	gorm.Model</span><br><span class="line">	Username <span class="keyword">string</span> <span class="string">`json:&quot;username&quot;`</span></span><br><span class="line">	Password <span class="keyword">string</span> <span class="string">`json:&quot;password&quot;`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="路由分组"><a href="#路由分组" class="headerlink" title="路由分组"></a>路由分组</h3><p>对路由进行分组可以使得结构更加清晰，而调用 <strong>gin</strong> 路由的 <strong>.Group()</strong> 方法时需要依赖于主路由 <strong>gin.Engine</strong> 指针，处理不好容易出现循环依赖，在这里主要这样写：</p>
+<ol>
+<li>在 <strong>index.go</strong> 文件里使用 <strong>gin.Default()</strong> 创建主路由</li>
+<li>在 <strong>userRoute.go</strong> 文件里编写 <strong>UserRegister()</strong> 函数，接收 <strong>gin.Engine</strong> 指针为参数</li>
+<li>在 <strong>UserRegister()</strong> 里使用 <strong>.Group()</strong> 进行路由分组</li>
+<li>在 <strong>index.go</strong> 依次调用各个分组文件的 <strong>register()</strong> 函数，最后调用 <strong>.run()</strong></li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route/index.go</span></span><br><span class="line"><span class="keyword">package</span> Route</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> R *gin.Engine</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">InitRoute</span><span class="params">()</span></span> &#123;</span><br><span class="line">	R = gin.Default()</span><br><span class="line">	UserRegister(R)</span><br><span class="line">	R.Run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route/userRoute.go</span></span><br><span class="line"><span class="keyword">package</span> Route</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;gin-practice/Handler&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">UserRegister</span><span class="params">(r *gin.Engine)</span></span> &#123;</span><br><span class="line">	userRoute := r.Group(<span class="string">&quot;user&quot;</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		userRoute.POST(<span class="string">&quot;/login&quot;</span>, Handler.LoginHandler)</span><br><span class="line">		userRoute.POST(<span class="string">&quot;/signup&quot;</span>, Handler.SignUpHandler)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="userHandler"><a href="#userHandler" class="headerlink" title="userHandler"></a>userHandler</h3><p>完成了上一步后关于项目的结构组织部分就差不多完成了，也就可以编写业务代码了。 <strong>Handler</strong> 层主要负责业务的逻辑</p>
+<h4 id="login"><a href="#login" class="headerlink" title="login"></a>login</h4><p>对于 <strong>login</strong> 的逻辑，比较简单清晰：</p>
+<ol>
+<li>前端通过 <strong>json</strong> 传入数据，后端调用 <strong>c.GetRawData()</strong> 获取</li>
+<li>利用 <strong>json.Unmarshal()</strong> 获取 <strong>username</strong> 和 <strong>password</strong></li>
+<li>通过 <strong>DB</strong> 对象进行查询</li>
+<li>如果用户存在，返回200状态和用户信息</li>
+<li>否则返回401状态</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Handler/userHandler.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">LoginHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 前端通过json传输数据</span></span><br><span class="line">	body, _ := c.GetRawData()</span><br><span class="line">	<span class="keyword">var</span> form <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	_ = json.Unmarshal(body, &amp;form)</span><br><span class="line"></span><br><span class="line">	username := form[<span class="string">&quot;username&quot;</span>].(<span class="keyword">string</span>)</span><br><span class="line">	password := form[<span class="string">&quot;password&quot;</span>].(<span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用DB进行查询</span></span><br><span class="line">	user, err := Service.FindUserByName(username)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> || !Utils.PasswordVerify(password, user.Password) &#123;</span><br><span class="line">		c.JSON(http.StatusUnauthorized, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;username or password is not correct&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		user, _ := json.Marshal(user)</span><br><span class="line">		c.JSON(http.StatusOK, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;user&quot;</span>:  <span class="keyword">string</span>(user),</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="signup"><a href="#signup" class="headerlink" title="signup"></a>signup</h4><p>对于 <strong>signup</strong> 思路基本一致，只不过在查询基础上多了创建的过程，另外通过返回的 <strong>error</strong> 来判断用户名是否被使用，是因为 <strong>gorm</strong> 里面调用 <strong>First()</strong> 进行查询时，如果查询结果为空，会返回 <strong>ErrRecordNotFound</strong> 错误</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Handler/userHandler.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SignUpHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	body, _ := c.GetRawData()</span><br><span class="line">	<span class="keyword">var</span> form <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	_ = json.Unmarshal(body, &amp;form)</span><br><span class="line"></span><br><span class="line">	username := form[<span class="string">&quot;username&quot;</span>].(<span class="keyword">string</span>)</span><br><span class="line">	password := form[<span class="string">&quot;password&quot;</span>].(<span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查询</span></span><br><span class="line">	_, err := Service.FindUserByName(username)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 错误不存在，即用户名已存在</span></span><br><span class="line">	<span class="keyword">if</span> err == <span class="literal">nil</span> &#123;</span><br><span class="line">		c.JSON(http.StatusForbidden, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;username has been used&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 数据库里不直接保存明文</span></span><br><span class="line">	hashPassword, _ := Utils.PasswordHash(password)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 调用DB创建用户</span></span><br><span class="line">	user, err := Service.CreateUser(Model.User&#123;</span><br><span class="line">		Username: username,</span><br><span class="line">		Password: hashPassword,</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		c.JSON(http.StatusInternalServerError, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;fail to create the user&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		user, _ := json.Marshal(user)</span><br><span class="line">		c.JSON(http.StatusOK, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;create successfully&quot;</span>,</span><br><span class="line">			<span class="string">&quot;user&quot;</span>:    <span class="keyword">string</span>(user),</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="passwordUtils"><a href="#passwordUtils" class="headerlink" title="passwordUtils"></a>passwordUtils</h3><p>在上面两个 <strong>Handler</strong> 函数里，分别调用了 <strong>PasswordVerify()</strong> 和 <strong>PasswordHash()</strong> 两个函数，那是因为数据库里通常不直接保存明文，而是加密后再保存到数据库里，然后在 <strong>login</strong> 操作的时候进行验证操作，在项目里使用了 <strong>bcrypt</strong> 进行加密解密</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Utils/passwordUtils.go</span></span><br><span class="line"><span class="keyword">package</span> Utils</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;golang.org/x/crypto/bcrypt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">PasswordHash</span><span class="params">(password <span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	bytes, err := bcrypt.GenerateFromPassword([]<span class="keyword">byte</span>(password), bcrypt.DefaultCost)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;&quot;</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">string</span>(bytes), err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">PasswordVerify</span><span class="params">(password, hash <span class="keyword">string</span>)</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	err := bcrypt.CompareHashAndPassword([]<span class="keyword">byte</span>(hash), []<span class="keyword">byte</span>(password))</span><br><span class="line">	<span class="keyword">return</span> err == <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="userService"><a href="#userService" class="headerlink" title="userService"></a>userService</h3><p>一开始编写 <strong>userHandler.go</strong> 时，直接在里面对数据库进行操作，一想到这样处理似乎不太优雅，也不利于代码复用。所以在原来的基础加上一层 <strong>Service</strong> 专门负责对数据库进行 <strong>CRUD</strong></p>
+<p>使用 <strong>gorm</strong> 对数据库 <strong>CRUD</strong> 也比较简单，可以通过 <strong>Where()</strong> 书写 <strong>sql</strong> 语句，创建的时候也只需调用 <strong>Create()</strong> 并传入对象指针即可：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Service/userService.go</span></span><br><span class="line"><span class="keyword">package</span> Service</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;gin-practice/Database&quot;</span></span><br><span class="line">	<span class="string">&quot;gin-practice/Model&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">FindUserByName</span><span class="params">(username <span class="keyword">string</span>)</span> <span class="params">(Model.User, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> user Model.User</span><br><span class="line">	result := Database.DB.Where(<span class="string">&quot;username = ?&quot;</span>, username).First(&amp;user)</span><br><span class="line">	<span class="keyword">return</span> user, result.Error</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CreateUser</span><span class="params">(user Model.User)</span> <span class="params">(Model.User, error)</span></span> &#123;</span><br><span class="line">	result := Database.DB.Create(&amp;user)</span><br><span class="line">	<span class="keyword">return</span> user, result.Error</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Next-js"><a href="#Next-js" class="headerlink" title="Next.js"></a>Next.js</h2><p>至此为止关于 <strong>login</strong> 和 <strong>signup</strong> 的逻辑，后端逻辑已经基本书写完成。前端使用了 <strong>Next.js</strong> 框架，主要是想熟悉 <strong>SSR</strong> ， <strong>SSG</strong> 知识。另外使用 <strong>React Query</strong> 对数据请求进行状态管理</p>
+<h3 id="Route"><a href="#Route" class="headerlink" title="Route"></a>Route</h3><p><strong>Next.js</strong> 已经完成了路由管理配置，在 <strong>pages</strong> 文件夹下新建任何一个 <strong>js</strong> 文件都会以其文件名作为路由，而如果是文件夹则会添加 <strong>/</strong> 分割，注意 <strong>pages/folder/index.js</strong> 不会被映射到 <strong>/folder/index</strong> 路由，而是 <strong>/folder</strong> 。</p>
+<p>如果需要主动进行路由跳转，可以使用官方的 <strong>&lt;Link&gt;</strong> 标签，也可以引入 <strong>Router</strong> 对象。</p>
+<h3 id="React-Query"><a href="#React-Query" class="headerlink" title="React Query"></a>React Query</h3><h4 id="QueryClient"><a href="#QueryClient" class="headerlink" title="QueryClient"></a>QueryClient</h4><p>要在项目里使用 <strong>React Query</strong> ，首先要创建一个 <strong>QueryClient</strong> 对象，然后使用 <strong>QueryClientProvider</strong> 将应用包裹起来：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/_app.js</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;../styles/globals.css&#x27;</span></span><br><span class="line"><span class="keyword">import</span> &#123; QueryClient, QueryClientProvider &#125; <span class="keyword">from</span> <span class="string">&#x27;react-query&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> queryClient = <span class="keyword">new</span> QueryClient();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">MyApp</span>(<span class="params">&#123; Component, pageProps &#125;</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">QueryClientProvider</span> <span class="attr">client</span>=<span class="string">&#123;queryClient&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;<span class="name">Component</span> &#123;<span class="attr">...pageProps</span>&#125; /&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">QueryClientProvider</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> MyApp</span><br></pre></td></tr></table></figure>
+
+<h4 id="useMutation"><a href="#useMutation" class="headerlink" title="useMutation"></a>useMutation</h4><p>当需要对数据源进行修改的时候，会使用 <strong>useMutation</strong> 这个钩子函数，其接收的第一个参数是数据请求函数，第二个参数则是配置项，比如 <strong>onSuccess</strong> 表示请求成功后所做的操作。</p>
+<p>返回值是一个对象，当真正进行请求时，调用 <strong>mutate()</strong> ， <strong>login</strong> 和 <strong>signup</strong> 页面逻辑基本一致，在这里只拿 <strong>signup.js</strong> 举例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/signup.js</span></span><br><span class="line"><span class="keyword">import</span> axios <span class="keyword">from</span> <span class="string">&#x27;axios&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> Router <span class="keyword">from</span> <span class="string">&#x27;next/router&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; useRef &#125; <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; useMutation &#125; <span class="keyword">from</span> <span class="string">&#x27;react-query&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 发送请求</span></span><br><span class="line"><span class="keyword">const</span> signupPost = <span class="keyword">async</span> (&#123; username, password &#125;) =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> res = <span class="keyword">await</span> axios.post(<span class="string">&#x27;http://127.0.0.1:8080/user/signup&#x27;</span>, &#123;</span><br><span class="line">        username,</span><br><span class="line">        password</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> SignUp = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> usernameRef = useRef(<span class="literal">null</span>);</span><br><span class="line">    <span class="keyword">const</span> passwordRef = useRef(<span class="literal">null</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> signupMutation = useMutation(signupPost, &#123;</span><br><span class="line">        <span class="comment">// 成功时路由跳转到login界面</span></span><br><span class="line">        <span class="attr">onSuccess</span>: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">            Router.push(<span class="string">&#x27;/login&#x27;</span>);</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        <span class="attr">onError</span>: <span class="function">(<span class="params">error</span>) =&gt;</span> &#123;</span><br><span class="line">            <span class="built_in">console</span>.log(error);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> handleSignUp = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> username = usernameRef.current.value;</span><br><span class="line">        <span class="keyword">const</span> password = passwordRef.current.value;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 真正发送请求</span></span><br><span class="line">        signupMutation.mutate(&#123; username, password &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">h1</span>&gt;</span>Sign Up<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">label</span>&gt;</span>uesrname: <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">input</span> <span class="attr">ref</span>=<span class="string">&#123;usernameRef&#125;</span> /&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">label</span>&gt;</span>password: <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;password&#x27;</span> <span class="attr">ref</span>=<span class="string">&#123;passwordRef&#125;</span> /&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;handleSignUp&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">                Sign Up</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">button</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">    )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> SignUp;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="JWT"><a href="#JWT" class="headerlink" title="JWT"></a>JWT</h1><p>基本的 <strong>login</strong> 和 <strong>signup</strong> 已经完成了，但是一般的应用里为了安全还会引入 <strong>JWT</strong> 。整个过程为：</p>
+<ol>
+<li>前端发起登录，后端生成 <strong>JWT Token</strong> 返回</li>
+<li>前端保存 <strong>token</strong> ，在后面的请求中都把 <strong>token</strong> 放入请求头的 <strong>Authorization</strong> 中</li>
+<li>后端会对后续请求进行检查，查看 <strong>token</strong> 是否存在与过期，据此对资源进行保护</li>
+</ol>
+<h2 id="GenToken"><a href="#GenToken" class="headerlink" title="GenToken"></a>GenToken</h2><p><strong>JWT Token</strong> 在后端生成，然后在 <strong>login</strong> 成功后派发，项目里使用了 <strong>jwt-go</strong> 库，基本步骤为：</p>
+<ol>
+<li>定义 <strong>UserStdClaims</strong> 结构体，创建时带上 <strong>user</strong> ，期限，签发人等信息</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// type/User.go</span></span><br><span class="line"><span class="keyword">package</span> Model</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;github.com/dgrijalva/jwt-go&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserStdClaims <span class="keyword">struct</span> &#123;</span><br><span class="line">	*User</span><br><span class="line">	jwt.StandardClaims</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>根据秘钥进行签发</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Utils/jwtUtils.go</span></span><br><span class="line"><span class="keyword">package</span> Utils</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;errors&quot;</span></span><br><span class="line">	<span class="string">&quot;gin-practice/Model&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/dgrijalva/jwt-go&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> TokenExpireDuration = time.Hour * <span class="number">24</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> screet = []<span class="keyword">byte</span>(<span class="string">&quot;jwt-screet&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GenToken</span><span class="params">(user Model.User)</span> <span class="params">(<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	c := Model.UserStdClaims&#123;</span><br><span class="line">		User: &amp;user,</span><br><span class="line">		StandardClaims: jwt.StandardClaims&#123;</span><br><span class="line">			ExpiresAt: time.Now().Add(TokenExpireDuration).Unix(),</span><br><span class="line">			Issuer:    <span class="string">&quot;Ken&quot;</span>,</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)</span><br><span class="line">	<span class="keyword">return</span> token.SignedString(screet)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>生成后在 <strong>LoginHandler</strong> 返回200状态码时，带上 <strong>token</strong></li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">LoginHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	<span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 生成token</span></span><br><span class="line">    tokenString, _ := Utils.GenToken(user)</span><br><span class="line">    <span class="comment">// 转为json</span></span><br><span class="line">    user, _ := json.Marshal(user)</span><br><span class="line">    c.JSON(http.StatusOK, gin.H&#123;</span><br><span class="line">        <span class="string">&quot;user&quot;</span>:  <span class="keyword">string</span>(user),  <span class="comment">// 转为string</span></span><br><span class="line">        <span class="string">&quot;token&quot;</span>: tokenString,</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="interceptor"><a href="#interceptor" class="headerlink" title="interceptor"></a>interceptor</h2><p>在后端对 <strong>login</strong> 信息进行验证后，前端就可以得到这个 <strong>token</strong> ，随后在访问其他页面的时候，都需要带上这个 <strong>token</strong> 。如何实现这一点呢？因为项目采用了 <strong>axios</strong> 进行网络请求，所以借助 <strong>interceptor</strong> 可以非常轻松完成这一项任务，于是在 <strong>pages/_app.js</strong> 下添加拦截器，将 <strong>token</strong> 存储在 <strong>localStorage</strong> 中，每次发起请求前都写入请求头的 <strong>Authorization</strong> 字段</p>
+<p>另外在这里要注意，由于 <strong>Next.js</strong> 属于服务端渲染，所以在初次渲染的时候是不存在 <strong>window</strong> 对象的，所以需要额外添加判断条件</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/_app.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> JWT_TOKEN = <span class="string">&#x27;jwt-token&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> BEARER = <span class="string">&#x27;Bearer&#x27;</span>;</span><br><span class="line"></span><br><span class="line">axios.interceptors.request.use(<span class="function"><span class="params">config</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// 防止在getServersideProps中报错</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="built_in">window</span> !== <span class="string">&#x27;undefined&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">const</span> token = <span class="built_in">window</span>.localStorage.getItem(JWT_TOKEN);</span><br><span class="line">    <span class="keyword">if</span> (token) &#123;</span><br><span class="line">	  <span class="comment">// 写入请求头的Authorization</span></span><br><span class="line">      config.headers.Authorization = BEARER + <span class="string">&#x27; &#x27;</span> + token;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> config;</span><br><span class="line">&#125;, <span class="function"><span class="params">err</span> =&gt;</span> <span class="built_in">Promise</span>.reject(err));</span><br></pre></td></tr></table></figure>
+
+<h2 id="JWTAuthMiddleware"><a href="#JWTAuthMiddleware" class="headerlink" title="JWTAuthMiddleware"></a>JWTAuthMiddleware</h2><p>前端的请求头带上 <strong>token</strong> 后，后端就需要在每次请求的时候验证 <strong>token</strong> ，通过则允许访问。实现的思路与拦截器类似，只不过在路由处理中称为中间件</p>
+<p><strong>gin</strong> 的中间件要求是返回 <strong>gin.HandlerFunc</strong> 的函数，在中间件里把 <strong>token</strong> 取出，然后借助 <strong>Utils</strong> 包的 <strong>ParseToken</strong> 进行验证，如果成功，可以重新得到一个前面定义的 <strong>UserStdClaims</strong> 对象，在里面可以获得 <strong>User</strong> 属性，然后将其放入 <strong>gin.Contex</strong> 中，这样使用了该中间件的路由，后面的 <strong>Handler</strong> 都可以从 <strong>gin.Contex</strong> 中取得 <strong>User</strong> 信息。相当于保存了 <strong>User</strong> 的登录状态</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Utils/jwtUtils.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ParseToken</span><span class="params">(tokenString <span class="keyword">string</span>)</span> <span class="params">(*Model.UserStdClaims, error)</span></span> &#123;</span><br><span class="line">	token, err := jwt.ParseWithClaims(tokenString, &amp;Model.UserStdClaims&#123;&#125;, <span class="function"><span class="keyword">func</span><span class="params">(t *jwt.Token)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">		<span class="keyword">return</span> screet, <span class="literal">nil</span></span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	claims, ok := token.Claims.(*Model.UserStdClaims)</span><br><span class="line">	<span class="keyword">if</span> ok &amp;&amp; token.Valid &#123;</span><br><span class="line">		<span class="keyword">return</span> claims, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span>, errors.New(<span class="string">&quot;invalid token&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Middleware/jwtAuthMiddleware.go</span></span><br><span class="line"><span class="keyword">package</span> Middleware</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;gin-practice/Utils&quot;</span></span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line">	<span class="string">&quot;strings&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">JWTAuthMiddleware</span><span class="params">()</span> <span class="title">gin</span>.<span class="title">HandlerFunc</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">		<span class="comment">// 从请求头中取出</span></span><br><span class="line">		authHeader := c.Request.Header.Get(<span class="string">&quot;Authorization&quot;</span>)</span><br><span class="line">		<span class="comment">// token为空，拒绝访问</span></span><br><span class="line">		<span class="keyword">if</span> authHeader == <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">			c.JSON(http.StatusForbidden, gin.H&#123;</span><br><span class="line">				<span class="string">&quot;message&quot;</span>: <span class="string">&quot;need token&quot;</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			c.Abort()</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 取出token</span></span><br><span class="line">		parts := strings.SplitN(authHeader, <span class="string">&quot; &quot;</span>, <span class="number">2</span>)</span><br><span class="line">		<span class="comment">// 格式不正确，拒绝访问</span></span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(parts) != <span class="number">2</span> || parts[<span class="number">0</span>] != <span class="string">&quot;Bearer&quot;</span> &#123;</span><br><span class="line">			c.JSON(http.StatusForbidden, gin.H&#123;</span><br><span class="line">				<span class="string">&quot;message&quot;</span>: <span class="string">&quot;the format is not correct&quot;</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			c.Abort()</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 获得UserStdClaims对象</span></span><br><span class="line">		claims, err := Utils.ParseToken(parts[<span class="number">1</span>])</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			c.JSON(http.StatusForbidden, gin.H&#123;</span><br><span class="line">				<span class="string">&quot;message&quot;</span>: <span class="string">&quot;invalid token&quot;</span>,</span><br><span class="line">			&#125;)</span><br><span class="line">			c.Abort()</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 放入gin.Context，方便后面Handler获得</span></span><br><span class="line">		c.Set(<span class="string">&quot;user&quot;</span>, claims.User)</span><br><span class="line">		<span class="comment">// 中间件显式调用next()</span></span><br><span class="line">		c.Next()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="cors"><a href="#cors" class="headerlink" title="cors"></a>cors</h2><p>接着就是在需要登录状态才能访问的路由中添加该中间件了，比如添加一个 <strong>/info end point</strong> ：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route/userRoute.go</span></span><br><span class="line">userRoute.GET(<span class="string">&quot;/info&quot;</span>, Middleware.JWTAuthMiddleware(), <span class="function"><span class="keyword">func</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	c.JSON(http.StatusOK, gin.H&#123;</span><br><span class="line">		<span class="string">&quot;message&quot;</span>: <span class="string">&quot;success&quot;</span>,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>另外除了关于 <strong>JWT</strong> 的中间件，项目里还封装了关于跨域处理的中间件，应用到了所有路由里：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Middleware/cors.go</span></span><br><span class="line"><span class="keyword">package</span> Middleware</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;net/http&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="string">&quot;github.com/gin-gonic/gin&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Cors</span><span class="params">()</span> <span class="title">gin</span>.<span class="title">HandlerFunc</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">		method := c.Request.Method</span><br><span class="line">		origin := c.Request.Header.Get(<span class="string">&quot;Origin&quot;</span>) <span class="comment">//请求头部</span></span><br><span class="line">		<span class="keyword">if</span> origin != <span class="string">&quot;&quot;</span> &#123;</span><br><span class="line">			<span class="comment">//接收客户端发送的origin （重要！）</span></span><br><span class="line">			c.Writer.Header().Set(<span class="string">&quot;Access-Control-Allow-Origin&quot;</span>, origin)</span><br><span class="line">			<span class="comment">//服务器支持的所有跨域请求的方法</span></span><br><span class="line">			c.Header(<span class="string">&quot;Access-Control-Allow-Methods&quot;</span>, <span class="string">&quot;POST, GET, OPTIONS, PUT, DELETE,UPDATE&quot;</span>)</span><br><span class="line">			<span class="comment">//允许跨域设置可以返回其他子段，可以自定义字段</span></span><br><span class="line">			c.Header(<span class="string">&quot;Access-Control-Allow-Headers&quot;</span>, <span class="string">&quot;Authorization, Content-Length, X-CSRF-Token, Token,session,X-Requested-With,Accept, Origin, Host, Connection, Accept-Encoding, Accept-Language,DNT, X-CustomHeader, Keep-Alive, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Content-Type, Pragma&quot;</span>)</span><br><span class="line">			<span class="comment">// 允许浏览器（客户端）可以解析的头部 （重要）</span></span><br><span class="line">			c.Header(<span class="string">&quot;Access-Control-Expose-Headers&quot;</span>, <span class="string">&quot;Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers&quot;</span>)</span><br><span class="line">			<span class="comment">//设置缓存时间</span></span><br><span class="line">			c.Header(<span class="string">&quot;Access-Control-Max-Age&quot;</span>, <span class="string">&quot;172800&quot;</span>)</span><br><span class="line">			<span class="comment">//允许客户端传递校验信息比如 cookie (重要)</span></span><br><span class="line">			c.Header(<span class="string">&quot;Access-Control-Allow-Credentials&quot;</span>, <span class="string">&quot;true&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//允许类型校验</span></span><br><span class="line">		<span class="keyword">if</span> method == <span class="string">&quot;OPTIONS&quot;</span> &#123;</span><br><span class="line">			c.JSON(http.StatusOK, <span class="string">&quot;ok!&quot;</span>)</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		c.Next()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="use-cookies-for-persisting-users-in-Next-js"><a href="#use-cookies-for-persisting-users-in-Next-js" class="headerlink" title="use cookies for persisting users in Next.js"></a>use cookies for persisting users in Next.js</h1><p>前面提到 <strong>JWTAuthMiddleware</strong> 中间件可以让后端获取用户登录状态，而在前端，通常的做法将登录状态保存在 <strong>redux</strong> 或者 <strong>session</strong> 里，但是这些方法在 <strong>Next.js</strong> 都失效了，只因为在渲染的时候是在服务端中进行，没有 <strong>redux</strong> 和 <strong>session</strong> 这些概念。</p>
+<p>不过在参考了下面这篇文章后，可以借助 <strong>cookie</strong> 实现状态存储：<br><a target="_blank" rel="noopener" href="https://dev.to/debosthefirst/how-to-use-cookies-for-persisting-users-in-nextjs-4617">https://dev.to/debosthefirst/how-to-use-cookies-for-persisting-users-in-nextjs-4617</a></p>
+<h2 id="store-user"><a href="#store-user" class="headerlink" title="store user"></a>store user</h2><p>核心就是借助 <strong>react-cookie</strong> 这个库，实现服务端和客户端 <strong>cookie</strong> 共享。首先使用 <strong>CookiesProvider</strong> 将应用包裹</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/_app.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">MyApp</span>(<span class="params">&#123; Component, pageProps &#125;</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> (</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">QueryClientProvider</span> <span class="attr">client</span>=<span class="string">&#123;queryClient&#125;</span>&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;<span class="name">CookiesProvider</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">Component</span> &#123;<span class="attr">...pageProps</span>&#125; /&gt;</span></span></span><br><span class="line"><span class="xml">      <span class="tag">&lt;/<span class="name">CookiesProvider</span>&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">QueryClientProvider</span>&gt;</span></span></span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后调用 <strong>useCookies</strong> 这个 <strong>hook</strong> ，在 <strong>login</strong> 成功时，通过 <strong>setCookie</strong> 将 <strong>user</strong> 保存。与此同时， <strong>token</strong> 保存在 <strong>localStorage</strong> 里</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/login.js</span></span><br><span class="line"><span class="keyword">const</span> [, setCookie] = useCookies([<span class="string">&#x27;user&#x27;</span>]);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> loginMutation = useMutation(loginPost, &#123;</span><br><span class="line">	<span class="attr">onSuccess</span>: <span class="function">(<span class="params">&#123; data &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">		<span class="keyword">const</span> token = data.token;</span><br><span class="line">		<span class="keyword">const</span> user = <span class="built_in">JSON</span>.parse(data.user);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// jwt token</span></span><br><span class="line">		<span class="built_in">window</span>.localStorage.setItem(JWT_TOKEN, token);</span><br><span class="line"></span><br><span class="line">		<span class="comment">// user cookie</span></span><br><span class="line">		setCookie(<span class="string">&#x27;user&#x27;</span>, data.user, &#123;</span><br><span class="line">			<span class="attr">path</span>: <span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">			<span class="attr">maxAge</span>: <span class="number">60</span> * <span class="number">60</span> * <span class="number">24</span>,</span><br><span class="line">			<span class="attr">sameSite</span>: <span class="literal">true</span></span><br><span class="line">		&#125;)</span><br><span class="line"></span><br><span class="line">		<span class="comment">// redirect</span></span><br><span class="line">		Router.push(<span class="string">`/Todo/<span class="subst">$&#123;user.ID&#125;</span>`</span>);</span><br><span class="line">	&#125;,</span><br><span class="line"></span><br><span class="line">	<span class="attr">onError</span>: <span class="function">(<span class="params">error</span>) =&gt;</span> &#123;</span><br><span class="line">		<span class="built_in">console</span>.log(error);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>另外 <strong>logout</strong> 的时候也要将 <strong>cookie</strong> 清除</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/index.js</span></span><br><span class="line"><span class="keyword">const</span> [, , removeCookie] = useCookies([<span class="string">&#x27;user&#x27;</span>]);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> handleLogOut = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">	<span class="built_in">window</span>.localStorage.removeItem(JWT_TOKEN);</span><br><span class="line">	removeCookie(<span class="string">&#x27;user&#x27;</span>);</span><br><span class="line">	Router.push(<span class="string">&#x27;/login&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后就是最关键的一步，在需要使用到用户状态的 <strong>js</strong> 文件里，在 <strong>getServerSideProps</strong> 函数里获取 <strong>req</strong> 对象，取出 <strong>cookie</strong> 判断是否为登录状态</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// helpers/index.js</span></span><br><span class="line"><span class="keyword">import</span> cookie <span class="keyword">from</span> <span class="string">&#x27;cookie&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">parseCookies</span>(<span class="params">req</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> cookie.parse(req ? req.headers.cookie || <span class="string">&#x27;&#x27;</span> : <span class="built_in">document</span>.cookie);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// pages/index.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> getServerSideProps = <span class="function">(<span class="params">&#123; req &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> data = parseCookies(req);</span><br><span class="line">  <span class="keyword">const</span> user = data.user;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// user不存在，重定向去login页面</span></span><br><span class="line">  <span class="keyword">if</span> (!user) &#123;</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">      <span class="attr">redirect</span>: &#123;</span><br><span class="line">        <span class="attr">destination</span>: <span class="string">&#x27;/login&#x27;</span>,</span><br><span class="line">        <span class="attr">permanent</span>: <span class="literal">false</span>,</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    <span class="attr">props</span>: &#123;</span><br><span class="line">      <span class="attr">user</span>: <span class="built_in">JSON</span>.parse(user)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="store-JWT"><a href="#store-JWT" class="headerlink" title="store JWT"></a>store JWT</h2><p>上面的实现是参考博客的，但有一个问题笔者也提出了，就是直接在 <strong>cookie</strong> 里存储 <strong>user</strong> 是 <strong>poor security practice</strong> 。既然项目里应用了 <strong>JWT</strong> ，就不应该同时把 <strong>user</strong> 存储在 <strong>cookie</strong> 里，又把 <strong>token</strong> 存储在 <strong>localStorage</strong> 里，容易出现数据不一致的情况</p>
+<p>正确的做法应该是把 <strong>token</strong> 放在 <strong>cookie</strong> 里，但是这样就衍生除了另外一个问题，在服务端渲染的时候取不到 <strong>user</strong> 信息，需要再次向后端发起请求才能获得登录用户的信息</p>
+<p>于是需要在 <strong>gin</strong> 里创建一个 <strong>/user/info end point</strong> ：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route/userRoute.go</span></span><br><span class="line">userRoute.GET(<span class="string">&quot;/info&quot;</span>, Middleware.JWTAuthMiddleware(), Handler.GetUserInfoHandler)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Hanlder/userHandler.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetUserInfoHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 经过JWT中间件，可直接获取user</span></span><br><span class="line">	user, exist := c.Get(<span class="string">&quot;user&quot;</span>)</span><br><span class="line">	<span class="keyword">if</span> !exist &#123;</span><br><span class="line">		c.JSON(http.StatusForbidden, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;didn&#x27;t login&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		user, _ := json.Marshal(user)</span><br><span class="line">		c.JSON(http.StatusOK, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;user&quot;</span>: <span class="keyword">string</span>(user),</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后在需要 <strong>user</strong> 信息的 <strong>Next.js</strong> 页面里，先发起请求验证是否登录：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/index.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> getServerSideProps = <span class="keyword">async</span> (&#123; req &#125;) =&gt; &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// 从cookie中取token</span></span><br><span class="line">    <span class="keyword">const</span> &#123; token &#125; = parseCookies(req);</span><br><span class="line">	<span class="comment">// 请求头上带上token</span></span><br><span class="line">    axios.defaults.headers.common[<span class="string">&#x27;Authorization&#x27;</span>] = <span class="string">`Bearer <span class="subst">$&#123;token&#125;</span>`</span>;</span><br><span class="line">    <span class="comment">// 发起请求验证</span></span><br><span class="line">	<span class="keyword">const</span> res = <span class="keyword">await</span> axios.get(<span class="string">&#x27;http://127.0.0.1:8080/user/info&#x27;</span>);</span><br><span class="line">    <span class="keyword">const</span> user = res.data.user;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">      <span class="attr">props</span>: &#123;</span><br><span class="line">        <span class="attr">user</span>: <span class="built_in">JSON</span>.parse(user)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (err) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(err);</span><br><span class="line">    <span class="keyword">return</span> &#123;</span><br><span class="line">      <span class="attr">redirect</span>: &#123;</span><br><span class="line">        <span class="attr">destination</span>: <span class="string">&#x27;/login&#x27;</span>,</span><br><span class="line">        <span class="attr">permanent</span>: <span class="literal">false</span>,</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如此处理，那么之前设置的 <strong>axios interceptor</strong> 就没有用了，在每个页面这样硬编写请求头也似乎不太优雅，解决方案可以利用一些 <strong>Next.js</strong> 中间件如 <strong>next-connect</strong> ，在这里就不再实现了</p>
+<hr>
+<h1 id="Todo"><a href="#Todo" class="headerlink" title="Todo"></a>Todo</h1><p>最后要实现一个 <strong>Todo</strong> 的需求，重点在于 <strong>React Query</strong> 的应用</p>
+<p>对于每一个用户都有属于自己的 <strong>Todo</strong> 页面，所以创建 <strong>pages/Todo/[id].js</strong> ，在 <strong>getServerSideProps()</strong> 函数里可以通过 <strong>params</strong> 获得 <strong>id</strong> 参数，然后进行请求</p>
+<h2 id="useQuery"><a href="#useQuery" class="headerlink" title="useQuery"></a>useQuery</h2><p>对于 <strong>SSR</strong> ， <strong>React Query</strong> 提供的解决方案是可以在 <strong>useQuery</strong> 里添加 <strong>initialData</strong> 参数当作初始值。另外因为获取 <strong>Todos</strong> 需要用户的 <strong>id</strong> ，因此需要在使用 <strong>useQuery</strong> 的时候，显式添加 <strong>id</strong> 参数</p>
+<p>而因为 <strong>getTodos</strong> 请求在 <strong>getServerSideProps()</strong> 和 <strong>Component</strong> 里都有使用，传参方式有点不一样，所以需要用条件判断一下。在 <strong>Component</strong> 里调用的时候， <strong>id</strong> 参数是放在 <strong>queryKey</strong> 数组里的</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/Todo/[id].js</span></span><br><span class="line"><span class="keyword">const</span> getTodos = <span class="keyword">async</span> (params) =&gt; &#123;</span><br><span class="line">    <span class="keyword">let</span> id;</span><br><span class="line">	<span class="comment">// 在Component里调用，id会放在queryKey数组里，数字第一项为&#x27;todo&#x27; key</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> params == <span class="string">&#x27;object&#x27;</span> &amp;&amp; params.queryKey) &#123;</span><br><span class="line">        id = params.queryKey[<span class="number">1</span>].id;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        id = params.id;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">const</span> res = <span class="keyword">await</span> axios.get(<span class="string">`http://127.0.0.1:8080/todo/<span class="subst">$&#123;id&#125;</span>`</span>);</span><br><span class="line">    <span class="keyword">const</span> todos = <span class="built_in">JSON</span>.parse(res.data.todos)</span><br><span class="line">    <span class="keyword">return</span> todos;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> todosQuery = useQuery([<span class="string">&#x27;todos&#x27;</span>, &#123; id &#125;], getTodos, &#123; <span class="attr">initialData</span>: todos &#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="useMutation-1"><a href="#useMutation-1" class="headerlink" title="useMutation"></a>useMutation</h2><p>对于 <strong>Todo</strong> 的添加与删除，需要用到 <strong>useMutation</strong> 这个 <strong>hook</strong> ，使用方式与之前 <strong>login</strong> 类似。但是值得注意的一点是，在执行 <strong>mutate()</strong> 方法对数据进行更改后，页面并没有更新，那是因为数据还停留在上一次请求，这个时候使用 <strong>React Query</strong> 的优势就体现出来了，可以通过 <strong>invalidateQueries()</strong> 使得带有指定 <strong>key</strong> 的请求失效，重新发起请求，达到数据刷新的效果：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// pages/Todo/[id].js</span></span><br><span class="line"><span class="comment">// 通过hook获取全局的QueryClient</span></span><br><span class="line"><span class="keyword">const</span> queryClient = useQueryClient();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 删除请求</span></span><br><span class="line"><span class="keyword">const</span> deleteTodo = <span class="keyword">async</span> (&#123; id &#125;) =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> res = <span class="keyword">await</span> axios.delete(<span class="string">`http://127.0.0.1:8080/todo/<span class="subst">$&#123;id&#125;</span>`</span>);</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> deleteTodoMutation = useMutation(deleteTodo, &#123;</span><br><span class="line">	<span class="attr">onSuccess</span>: <span class="function">() =&gt;</span> &#123;</span><br><span class="line">		<span class="comment">// 成功后使带有todos的query失效</span></span><br><span class="line">		queryClient.invalidateQueries(<span class="string">&#x27;todos&#x27;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="gin-1"><a href="#gin-1" class="headerlink" title="gin"></a>gin</h2><p>至于后端的 <strong>gin</strong> 代码就没有什么特别的了，可以在 <strong>github</strong> 里查看具体代码：<br><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/go-gin">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/go-gin</a></p>
+<p>拿一个 <strong>CRUD</strong> 举例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route/todoRoute.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TodoRegister</span><span class="params">(r *gin.Engine)</span></span> &#123;</span><br><span class="line">	todoRouter := r.Group(<span class="string">&quot;/todo&quot;</span>)</span><br><span class="line">	<span class="comment">// 都需要有 jwt token 才能访问</span></span><br><span class="line">	todoRouter.Use(Middleware.JWTAuthMiddleware())</span><br><span class="line">	&#123;</span><br><span class="line">		todoRouter.GET(<span class="string">&quot;/:id&quot;</span>, Handler.GetTodosHandler)</span><br><span class="line">		todoRouter.POST(<span class="string">&quot;/:id&quot;</span>, Handler.CreateTodoHandler)</span><br><span class="line">		todoRouter.DELETE(<span class="string">&quot;/:id&quot;</span>, Handler.DeleteTodoHandler)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Handler/todoHandler.go</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DeleteTodoHandler</span><span class="params">(c *gin.Context)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 获取url里的id参数</span></span><br><span class="line">	id, _ := c.Params.Get(<span class="string">&quot;id&quot;</span>)</span><br><span class="line">	err := Service.DeleteTodoByTodoId(id)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		c.JSON(http.StatusInternalServerError, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;message&quot;</span>: <span class="string">&quot;fail to delete Todo&quot;</span>,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		c.JSON(http.StatusOK, gin.H&#123;</span><br><span class="line">			<span class="string">&quot;id&quot;</span>: id,</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>此次的 <strong>Todo demo</strong> 没有实现什么特别的功能，主要是熟悉了一些新的技术栈：</p>
+<ol>
+<li><strong>Next.js</strong> 基本使用，如 <strong>API Route</strong> ，自动配置路由等。区分 <strong>SSG</strong> 和 <strong>SSR</strong> ，使用 <strong>getServerSideProps()</strong> 还是和平时的 <strong>SPA</strong> 有很大不同的</li>
+<li><strong>JWT</strong> 流程，用户登录状态存储应该怎么处理，一些流行的解决方案或者技术栈如：<strong>Auth0</strong> ， <strong>next-connect</strong> 值得以后去了解</li>
+<li><strong>gin</strong> 搭建流程，特别是项目结构与路由分组</li>
+<li><strong>React Query</strong> 状态管理，利用 <strong>useQuery</strong> ， <strong>useMutation</strong> 和 <strong>invalidateQueries()</strong> 对请求和数据进行管理</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/12/13/Component%20-%20DraggableTree%E5%8F%AF%E6%8B%96%E6%8B%BD%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/" rel="prev" title="Component - DraggableTree可拖拽树形控件">
+      <i class="fa fa-chevron-left"></i> Component - DraggableTree可拖拽树形控件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#preview"><span class="nav-number">1.</span> <span class="nav-text">preview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#login-amp-signup"><span class="nav-number">2.</span> <span class="nav-text">login &amp; signup</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#gin"><span class="nav-number">2.1.</span> <span class="nav-text">gin</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setup"><span class="nav-number">2.1.1.</span> <span class="nav-text">setup</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#structure"><span class="nav-number">2.1.2.</span> <span class="nav-text">structure</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Database-DB"><span class="nav-number">2.1.3.</span> <span class="nav-text">Database.DB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#User"><span class="nav-number">2.1.4.</span> <span class="nav-text">User</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E5%88%86%E7%BB%84"><span class="nav-number">2.1.5.</span> <span class="nav-text">路由分组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#userHandler"><span class="nav-number">2.1.6.</span> <span class="nav-text">userHandler</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#login"><span class="nav-number">2.1.6.1.</span> <span class="nav-text">login</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#signup"><span class="nav-number">2.1.6.2.</span> <span class="nav-text">signup</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#passwordUtils"><span class="nav-number">2.1.7.</span> <span class="nav-text">passwordUtils</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#userService"><span class="nav-number">2.1.8.</span> <span class="nav-text">userService</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Next-js"><span class="nav-number">2.2.</span> <span class="nav-text">Next.js</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Route"><span class="nav-number">2.2.1.</span> <span class="nav-text">Route</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#React-Query"><span class="nav-number">2.2.2.</span> <span class="nav-text">React Query</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#QueryClient"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">QueryClient</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#useMutation"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">useMutation</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JWT"><span class="nav-number">3.</span> <span class="nav-text">JWT</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GenToken"><span class="nav-number">3.1.</span> <span class="nav-text">GenToken</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#interceptor"><span class="nav-number">3.2.</span> <span class="nav-text">interceptor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JWTAuthMiddleware"><span class="nav-number">3.3.</span> <span class="nav-text">JWTAuthMiddleware</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cors"><span class="nav-number">3.4.</span> <span class="nav-text">cors</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#use-cookies-for-persisting-users-in-Next-js"><span class="nav-number">4.</span> <span class="nav-text">use cookies for persisting users in Next.js</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#store-user"><span class="nav-number">4.1.</span> <span class="nav-text">store user</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#store-JWT"><span class="nav-number">4.2.</span> <span class="nav-text">store JWT</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Todo"><span class="nav-number">5.</span> <span class="nav-text">Todo</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#useQuery"><span class="nav-number">5.1.</span> <span class="nav-text">useQuery</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#useMutation-1"><span class="nav-number">5.2.</span> <span class="nav-text">useMutation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gin-1"><span class="nav-number">5.3.</span> <span class="nav-text">gin</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ken</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Ken-HH24" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ken</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
