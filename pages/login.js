@@ -3,6 +3,7 @@ import { JWT_TOKEN } from './_app';
 import Router from 'next/router';
 import { useRef } from 'react';
 import { useMutation } from 'react-query';
+import { useCookies } from 'react-cookie';
 
 const loginPost = async ({ username, password }) => {
     const res = await axios.post('http://127.0.0.1:8080/user/login', {
@@ -15,12 +16,25 @@ const loginPost = async ({ username, password }) => {
 const Login = () => {
     const usernameRef = useRef(null);
     const passwordRef = useRef(null);
+    const [, setCookie] = useCookies(['user']);
 
     const loginMutation = useMutation(loginPost, {
-        onSuccess: (data) => {
-            const token = data.data.token;
+        onSuccess: ({ data }) => {
+            const token = data.token;
+            const user = JSON.parse(data.user);
+
+            // jwt token
             window.localStorage.setItem(JWT_TOKEN, token);
-            Router.push('/');
+
+            // user cookie
+            setCookie('user', data.user, {
+                path: '/',
+                maxAge: 60 * 60 * 24,
+                sameSite: true
+            })
+
+            // redirect
+            Router.push(`/Todo/${user.ID}`);
         },
 
         onError: (error) => {
@@ -38,6 +52,7 @@ const Login = () => {
     return (
         <div>
             <h1>Login</h1>
+            {loginMutation.error && <h2 style={{ color: 'red' }}>error</h2>}
             <div>
                 <label>uesrname: </label>
                 <input ref={usernameRef} />

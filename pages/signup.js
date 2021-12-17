@@ -41,7 +41,7 @@ const SignUp = () => {
             </div>
             <div>
                 <label>password: </label>
-                <input ref={passwordRef} />
+                <input type='password' ref={passwordRef} />
             </div>
             <button onClick={handleSignUp}>
                 Sign Up
