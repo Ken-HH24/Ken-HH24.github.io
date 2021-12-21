@@ -1,10 +1,10 @@
 import React from 'react';
-import TreeDemo from './components/Tree/demo';
+import CascaderDemo from './components/Cascader/demo';
 
 function App() {
   return (
     <div className="App">
-      <TreeDemo />
+      <CascaderDemo />
     </div>
   );
 }

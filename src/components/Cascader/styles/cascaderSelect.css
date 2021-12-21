@@ -1,0 +1,36 @@
+.cascader-select {
+    min-height: 32px;
+    min-width: 100px;
+    line-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 3px;
+    background-color: #f4f5f5;
+    color: #95a5a6;
+    border: solid 1px transparent;
+    padding-left: 1em;
+    padding-right: 1em;
+    transition: 0.2s ease-in-out all;
+}
+
+.cascader-select.open {
+    border: solid 1px #396afc;
+}
+
+.cascader-select.open .cascader-select-right svg {
+    transform: rotate(90deg);
+}
+
+.cascader-select-right {
+    margin-left: auto;
+}
+
+.cascader-select-right svg {
+    transition: all 0.2s ease-in-out;
+}
+
+.cascader-select-right > span {
+    display: flex;
+    align-items: center;
+}
