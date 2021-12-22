@@ -9,7 +9,7 @@ interface SelectProps {
     handleClick: () => void
 }
 
-const Select: React.FC<SelectProps> = (props, ref) => {
+const Select: React.FC<SelectProps> = (props) => {
     const { isOpen, content, handleClick } = props;
 
     const PREFIX = 'cascader-select';

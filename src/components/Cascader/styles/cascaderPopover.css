@@ -15,7 +15,7 @@ ul {
     margin-top: 5px;
 }
 
-.popover-list-wrapper {
+.cascader-item-list-wrapper {
     position: absolute;
     display: flex;
     border-radius: 6px;
@@ -24,7 +24,7 @@ ul {
     box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.1);
 }
 
-.popover-list {
+.cascader-item-list {
     min-width: 120px;
     min-height: 200px;
     display: flex;
@@ -51,11 +51,11 @@ ul {
 }
 
 .cascader-item.selected.leaf {
-    color: #1E80FF;
+    color: #1e80ff;
 }
 
 .cascader-item.active {
-    background-color: #EAF5FF;
+    background-color: #eaf5ff;
 }
 
 .cascader-item > .item-icon {

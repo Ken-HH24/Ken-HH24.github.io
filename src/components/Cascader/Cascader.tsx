@@ -5,6 +5,7 @@ import { BasicCascaderData, BasicEntity } from './types';
 import Popover from './Popover';
 import SelectItem from './SelectItem';
 import useClickOutside from '../../hooks/useClickOutside';
+import CascaderItem from './CascaderItem';
 
 export interface CascaderProps {
     multiple?: boolean
@@ -23,8 +24,9 @@ const traverseChildren = (node: BasicEntity, callback: (param: string) => void) 
 const Cascader: React.FC<CascaderProps> = (props) => {
     const { multiple, treeData } = props;
 
-    const cascaderRef = useRef<HTMLDivElement>(null);
     const lastSelectedKey = useRef<any>(null);
+    const cascaderRef = useRef<HTMLDivElement>(null);
+
     const [isOpen, setIsOpen] = useState(false);
     const [content, setContent] = useState<any>('');
     const [activeKeys, setActiveKeys] = useState(new Set<string>());
@@ -64,6 +66,8 @@ const Cascader: React.FC<CascaderProps> = (props) => {
         while (entity) {
             if (entity.children && entity.children.every(child => newCheckedKeys.has(child.key))) {
                 newCheckedKeys.add(entity.key);
+            } else {
+                newCheckedKeys.delete(entity.key);
             }
             entity = entity.parent;
         }
@@ -123,10 +127,9 @@ const Cascader: React.FC<CascaderProps> = (props) => {
         )
     }
 
-    return (
-        <div ref={cascaderRef}>
-            <Popover
-                isShow={isOpen}
+    const renderCascaderItem = () => {
+        return (
+            <CascaderItem
                 activeKeys={activeKeys}
                 checkedKeys={checkedKeys}
                 selectedKeys={selectedKeys}
@@ -134,6 +137,15 @@ const Cascader: React.FC<CascaderProps> = (props) => {
                 data={getRenderData(keyEntities)}
                 handleItemClick={handleItemClick}
                 handleItemCheckboxClick={handleItemCheckboxClick}
+            />
+        )
+    }
+
+    return (
+        <div ref={cascaderRef}>
+            <Popover
+                isShow={isOpen}
+                content={renderCascaderItem()}
             >
                 {renderSelect()}
             </Popover>
