@@ -150,6 +150,85 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/22/Component%20-%20Cascader%E7%BA%A7%E8%81%94%E9%80%89%E6%8B%A9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/12/22/Component%20-%20Cascader%E7%BA%A7%E8%81%94%E9%80%89%E6%8B%A9/" class="post-title-link" itemprop="url">Component - Cascader级联选择</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-12-22 09:16:27 / Modified: 10:43:14" itemprop="dateCreated datePublished" datetime="2021-12-22T09:16:27+08:00">2021-12-22</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>偶然在公众号里看到一片文章，是关于 <strong>cascader</strong> 多选级联实现的，里面谈到 <strong>ant design</strong> 的级联选择没有提供多选的功能。本来想照着文章实现以下的，后来去看了一眼 <strong>semi design</strong> ，发现官方已经实现了 <strong>multiple</strong> 多选的 <strong>api</strong> 。因此去翻了对应的源码，并自己实现了一下。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Cascader">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Cascader</a></li>
+</ul>
+<h1 id="Select"><a href="#Select" class="headerlink" title="Select"></a>Select</h1><p>翻开 <strong>semi design</strong> 的源码可以发现，在 <strong>render()</strong> 函数里主要有两部分组件被渲染了，一个是 <strong>Select</strong> ，另外一个是 <strong>Popover</strong> 。先从简单的 <strong>Select</strong> 讲起，也就是选项框。由于太简单，官方甚至没有将其封装成一个组件。</p>
+<p>选项框的职责主要有两个：</p>
+<ol>
+<li>用户点击负责改变 <strong>isOpen</strong> 状态，控制级联选项是否可见</li>
+<li>用户确定选项之后，把最终内容反映在选项框内</li>
+</ol>
+<p>实现第一个需求很简单，就是添加 <strong>onClick</strong> 事件通过 <strong>setOpen</strong> 来改变状态。而对于第二个需求，则是通过传入 <strong>content</strong> ，将 <strong>content</strong> 放入选项框内实现，以应对不同的结果渲染要求：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> React <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;./styles/cascaderSelect.css&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; Right &#125; <span class="keyword">from</span> <span class="string">&#x27;@icon-park/react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> cls <span class="keyword">from</span> <span class="string">&#x27;classnames&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> SelectProps &#123;</span><br><span class="line">    <span class="attr">content</span>: <span class="built_in">any</span></span><br><span class="line">    <span class="attr">isOpen</span>: <span class="built_in">boolean</span></span><br><span class="line">    <span class="attr">handleClick</span>: <span class="function">() =&gt;</span> <span class="built_in">void</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> Select: React.FC&lt;SelectProps&gt; = <span class="function">(<span class="params">props</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> &#123; isOpen, content, handleClick &#125; = props;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> PREFIX = <span class="string">&#x27;cascader-select&#x27;</span>;</span><br><span class="line">    <span class="keyword">const</span> classNames = cls(PREFIX, &#123;</span><br><span class="line">        <span class="string">&#x27;open&#x27;</span>: isOpen</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">        <span class="xml"><span class="tag">&lt;<span class="name">div</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">className</span>=<span class="string">&#123;classNames&#125;</span></span></span></span><br><span class="line"><span class="tag"><span class="xml">            <span class="attr">onClick</span>=<span class="string">&#123;()</span> =&gt;</span> &#123; handleClick() &#125;&#125;</span></span><br><span class="line"><span class="xml">        &gt;</span></span><br><span class="line"><span class="xml">            &#123;content&#125;</span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;<span class="name">span</span> <span class="attr">className</span>=<span class="string">&#123;</span>`$&#123;<span class="attr">PREFIX</span>&#125;<span class="attr">-right</span>`&#125;&gt;</span></span></span><br><span class="line"><span class="xml">                <span class="tag">&lt;<span class="name">Right</span> /&gt;</span></span></span><br><span class="line"><span class="xml">            <span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">    );</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> React.memo(Select);</span><br></pre></td></tr></table></figure>
+
+<hr>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/12/22/Component%20-%20Cascader%E7%BA%A7%E8%81%94%E9%80%89%E6%8B%A9/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/12/16/Next.js%20&%20gin%20%E5%85%A5%E9%97%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -181,7 +260,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-17 11:11:08" itemprop="dateModified" datetime="2021-12-17T11:11:08+08:00">2021-12-17</time>
+                <time title="Modified: 2021-12-21 16:20:04" itemprop="dateModified" datetime="2021-12-21T16:20:04+08:00">2021-12-21</time>
               </span>
 
           
@@ -269,7 +348,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:24:41" itemprop="dateModified" datetime="2021-12-16T19:24:41+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:40:50" itemprop="dateModified" datetime="2021-12-22T10:40:50+08:00">2021-12-22</time>
               </span>
 
           
@@ -290,6 +369,9 @@
 <li>如何在拖拽的过程中提供较良好的用户体验，比如在用户拖动到文件夹上时，该结构会自动展开。又或者添加适当的提醒让用户知道现在的拖拽结果</li>
 </ol>
 <p>而以上问题都在阅读 <strong>semi design</strong> 源码，并自己动手实践后得到解决。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree</a></li>
+</ul>
 <hr>
 <h1 id="draggable"><a href="#draggable" class="headerlink" title="draggable"></a>draggable</h1><p>首先要达到可拖拽的效果，就需要使用 <strong>draggable</strong> 这个 <strong>API</strong> ，首先需要显式地在标签里添加 <strong>draggable = ‘true’</strong> 而不能只写 <strong>draggable</strong> 。</p>
 <p>然后为每个 <strong>TreeNode</strong> 添加 <strong>onDragStart</strong> ， <strong>onDragEnter</strong> 等事件。其中在 <strong>onDragStart</strong> 事件中，需要特别地调用 <code>e.dataTransfer.setData(&#39;text/plain&#39;, &#39;&#39;);</code> ，否则在某些浏览器内不会生效。另外在拖拽 <strong>&lt;li&gt;</strong> 标签的过程中会发现鼠标状态一直是一个禁止的图标，非常影响用户体验，要解决这个问题则需要在其他 <strong>drag</strong> 事件中添加 <code>e.dataTransfer.dropEffect = &#39;move&#39;;</code> ，改为移动图标。</p>
@@ -376,7 +458,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 15:03:34" itemprop="dateModified" datetime="2021-12-16T15:03:34+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:13" itemprop="dateModified" datetime="2021-12-22T10:41:13+08:00">2021-12-22</time>
               </span>
 
           
@@ -391,6 +473,9 @@
 
       
           <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>axios</strong> 是前端常用的网络请求库，在 <strong>github</strong> 上有将近 <strong>90k stars</strong> 。翻开源码，其核心实现部分也并不复杂，个人觉得精髓在于 <strong>interceptor</strong> 拦截器 和 <strong>Adapter</strong> 适配器的设计。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/axios">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/axios</a></li>
+</ul>
 <h1 id="axios"><a href="#axios" class="headerlink" title="axios"></a>axios</h1><p>在 <strong>src</strong> 目录下的 <strong>axios.js</strong> ，可以看到该文件使用 <strong>createInstance()</strong> 创建了一个 <strong>axios</strong> ，然后将其 <strong>export</strong> 。然而 <strong>axios</strong> 并不是简单的 <strong>Axios</strong> 实例，而是 <strong>Axios.prototype.request</strong> 方法。至于为什么要这样做，大概是因为 <strong>axios</strong> 需要提供 <code>axios(config)</code> 这种使用方式。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create an instance of Axios</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;Object&#125;</span> </span>defaultConfig The default config for the instance</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return <span class="type">&#123;Axios&#125;</span> </span>A new instance of Axios</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">createInstance</span>(<span class="params">defaultConfig</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> context = <span class="keyword">new</span> Axios(defaultConfig);</span><br><span class="line">  <span class="keyword">var</span> instance = bind(Axios.prototype.request, context);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Copy axios.prototype to instance</span></span><br><span class="line">  utils.extend(instance, Axios.prototype, context);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Copy context to instance</span></span><br><span class="line">  utils.extend(instance, context);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Factory for creating new instances</span></span><br><span class="line">  instance.create = <span class="function"><span class="keyword">function</span> <span class="title">create</span>(<span class="params">instanceConfig</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> createInstance(mergeConfig(defaultConfig, instanceConfig));</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Create the default instance to be exported</span></span><br><span class="line"><span class="keyword">var</span> axios = createInstance(defaults);</span><br></pre></td></tr></table></figure>
 
@@ -455,7 +540,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:24:29" itemprop="dateModified" datetime="2021-12-16T19:24:29+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:06" itemprop="dateModified" datetime="2021-12-22T10:41:06+08:00">2021-12-22</time>
               </span>
 
           
@@ -471,6 +556,9 @@
       
           <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>Tree</strong> 树形控件是我实习的时候封装的第一个组件。但是在当时， <strong>渲染节点数量控制</strong> ，<strong>节点信息修改</strong> ，<strong>组件代码结构</strong> 这些问题以自己的能力都很难完美解决，也导致在最后的答辩中的失利。</p>
 <p>现在来复盘一下该组件应该如何设计，并借鉴 <strong>github</strong> 上的 <strong>semi design</strong> ，阅读一下企业组件库的源码是如何设计 <strong>Tree</strong> 树形控件的。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree</a></li>
+</ul>
 <hr>
 <h1 id="data-structure"><a href="#data-structure" class="headerlink" title="data structure"></a>data structure</h1><p>首先要考虑到组件所接收的 <strong>treeData</strong> 数据结构，在实习的时候，由于后台接口原因，数据是这样的：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> treeData = [</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;亚洲&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Asia&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;0&#x27;</span>, <span class="attr">parent</span>: <span class="literal">null</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;中国&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;China&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;0-0&#x27;</span>, <span class="attr">parent</span>: <span class="string">&#x27;0&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;日本&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Japan&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;0-1&#x27;</span>, <span class="attr">parent</span>: <span class="string">&#x27;0&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;北美洲&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;North America&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;1&#x27;</span>, <span class="attr">parent</span>: <span class="literal">null</span>&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
@@ -537,7 +625,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 15:03:46" itemprop="dateModified" datetime="2021-12-16T15:03:46+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:16" itemprop="dateModified" datetime="2021-12-22T10:41:16+08:00">2021-12-22</time>
               </span>
 
           
@@ -553,6 +641,9 @@
       
           <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>上一篇完成了阅读 <strong>redux</strong> 源码并动手实现了一个 <strong>mini-redux</strong> 。<strong>redux</strong> 是一个面对 <strong>JS</strong> 的状态管理库，当投入到 <strong>React</strong> 里使用中时，如果仅从 <strong>subscribe</strong> 函数上进行展开使用，会变得十分麻烦。</p>
 <p><strong>react-redux</strong> 的出现使得在 <strong>React</strong> 能够更好地使用 <strong>redux</strong> ，通过 <strong>Provider</strong> 组件将整个 <strong>store</strong> 注入，然后当子组件需要使用到 <strong>store</strong> 里的数据时，通过 <strong>connect</strong> 函数，编写 <strong>mapStateToProps</strong> 和 <strong>mapDispatchToProps</strong> ，就可以将目标 <strong>store</strong> 数据注入到目标组件的 <strong>props</strong> 中。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/react-redux">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/react-redux</a></li>
+</ul>
 <hr>
 <h1 id="Question"><a href="#Question" class="headerlink" title="Question"></a>Question</h1><p>在网上经常可以看到，<strong>React</strong> 中的 <strong>useContext</strong> 和 <strong>useReducer</strong> 已经可以基本满足状态管理的需求了，那么为什么还需要 <strong>react-redux</strong> ，直接使用 <strong>useContext</strong> 并注入 <strong>redux</strong> 中的 <strong>store</strong> 不就好了吗？</p>
 <p>首先使用 <strong>useContext</strong> 就表明不可直接将数据注入 <strong>props</strong> 中，当然使用 <strong>hooks</strong> 也有他的好处。但是由于 <strong>redux</strong> 的状态 <strong>state</strong> 是通过闭包保存在 <strong>store</strong> 里面的，所以当调用 <strong>dispatch</strong> 改变 <strong>state</strong> 时，<strong>React</strong> 的 <strong>Context API</strong> 是检测不到 <strong>store</strong> 的变化的，也无法进行更新，因此必须实现一套新的 <strong>API</strong> 供 <strong>React</strong> 使用 <strong>redux</strong> 。</p>
@@ -624,7 +715,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 15:04:14" itemprop="dateModified" datetime="2021-12-16T15:04:14+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:24" itemprop="dateModified" datetime="2021-12-22T10:41:24+08:00">2021-12-22</time>
               </span>
 
           
@@ -639,6 +730,9 @@
 
       
           <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>redux</strong> 是著名的 <strong>JavaScript</strong> 状态管理库，翻看 <strong>github</strong> 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/redux">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/redux</a></li>
+</ul>
 <hr>
 <h1 id="createStore"><a href="#createStore" class="headerlink" title="createStore"></a>createStore</h1><h2 id="dispatch"><a href="#dispatch" class="headerlink" title="dispatch"></a>dispatch</h2><p>既然是负责状态管理，那么 <strong>redux</strong> 就应该有一个 <strong>store</strong> 来存储数据。<strong>store</strong> 里面的数据不可直接改变，而是委托一个 <strong>dispatch</strong> 函数来完成，通过派发 <strong>action</strong> ，交由 <strong>reducer</strong> 来产生新的状态 <strong>state</strong> 。</p>
 <p>因此 <strong>createStore</strong> 函数的参数包括：</p>
@@ -857,7 +951,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:25:03" itemprop="dateModified" datetime="2021-12-16T19:25:03+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:02" itemprop="dateModified" datetime="2021-12-22T10:41:02+08:00">2021-12-22</time>
               </span>
 
           
@@ -883,85 +977,12 @@
 <li><p>为弹窗的显示与消失添加动画，不依赖任何库</p>
 </li>
 </ol>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Dialog">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Dialog</a></li>
+</ul>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Ken">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Ken's blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/" class="post-title-link" itemprop="url">fre source code - schedule篇</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2021-11-26 09:25:21" itemprop="dateCreated datePublished" datetime="2021-11-26T09:25:21+08:00">2021-11-26</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 15:11:52" itemprop="dateModified" datetime="2021-12-16T15:11:52+08:00">2021-12-16</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>偶然了解到 <strong>fre</strong> 这个框架，甚至不能称他为框架，因为他太 “小” 了，作者是这样定义他的： <strong>Tiny Concurrent UI library with Fiber</strong> 。</p>
-<p>虽然代码量极小，却以相同的 <strong>fiber</strong> 思路，实现了 <strong>React</strong> 中的大量功能。对于想了解 <strong>React</strong>， 却又对庞大的源码无从下手的人来说，是一个极佳的学习资源。接下来就从不到 50 行的 <strong>schedule</strong> 模块开始分析 <strong>fre</strong> 是如何运作的。</p>
-<hr>
-<h1 id="schedule"><a href="#schedule" class="headerlink" title="schedule"></a>schedule</h1><p><strong>schedule</strong> 函数很简单，仅仅是把任务 <strong>push</strong> 到了队列 <strong>queue</strong> 里面，然后执行 <strong>postTask</strong> 函数。而 <strong>postTask</strong> 一开始是一个变量，他指向 <strong>task(false)</strong> ，开启了一个微任务执行 <strong>flush</strong> 函数。对源码进行一下翻译就是：</p>
-<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 源码</span></span><br><span class="line"><span class="keyword">let</span> postTask = task(<span class="literal">false</span>)</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; postTask()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 翻译后</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; <span class="built_in">Promise</span>.resolve().then(flush)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -1050,7 +1071,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="previewTree 树形控件是我实习的时候封装的第一个组件。但是在当时， 渲染节点数量控制 ，节点信息修改 ，组件代码结构 这些问题以自己的能力都很难完美解决，也导致在最后的答辩中的失利。 现在来复盘一下该组件应该如何设计，并借鉴 github 上的 semi design ，阅读一下企业组件库的源码是如何设计 Tree 树形控件的。  data structure首先要考虑到组件所接收的 t">
+  <meta name="description" content="previewTree 树形控件是我实习的时候封装的第一个组件。但是在当时， 渲染节点数量控制 ，节点信息修改 ，组件代码结构 这些问题以自己的能力都很难完美解决，也导致在最后的答辩中的失利。 现在来复盘一下该组件应该如何设计，并借鉴 github 上的 semi design ，阅读一下企业组件库的源码是如何设计 Tree 树形控件的。  https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24&#x2F;">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Component - Tree树形控件">
 <meta property="og:url" content="http://example.com/2021/12/08/Component%20-%20Tree%E6%A0%91%E5%BD%A2%E6%8E%A7%E4%BB%B6/index.html">
 <meta property="og:site_name" content="Ken&#39;s blog">
-<meta property="og:description" content="previewTree 树形控件是我实习的时候封装的第一个组件。但是在当时， 渲染节点数量控制 ，节点信息修改 ，组件代码结构 这些问题以自己的能力都很难完美解决，也导致在最后的答辩中的失利。 现在来复盘一下该组件应该如何设计，并借鉴 github 上的 semi design ，阅读一下企业组件库的源码是如何设计 Tree 树形控件的。  data structure首先要考虑到组件所接收的 t">
+<meta property="og:description" content="previewTree 树形控件是我实习的时候封装的第一个组件。但是在当时， 渲染节点数量控制 ，节点信息修改 ，组件代码结构 这些问题以自己的能力都很难完美解决，也导致在最后的答辩中的失利。 现在来复盘一下该组件应该如何设计，并借鉴 github 上的 semi design ，阅读一下企业组件库的源码是如何设计 Tree 树形控件的。  https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24&#x2F;">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-12-08T02:27:05.000Z">
-<meta property="article:modified_time" content="2021-12-16T11:24:29.486Z">
+<meta property="article:modified_time" content="2021-12-22T02:41:06.503Z">
 <meta property="article:author" content="Ken">
 <meta property="article:tag" content="Component">
 <meta name="twitter:card" content="summary">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:24:29" itemprop="dateModified" datetime="2021-12-16T19:24:29+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:06" itemprop="dateModified" datetime="2021-12-22T10:41:06+08:00">2021-12-22</time>
               </span>
 
           
@@ -202,6 +202,9 @@
       
         <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>Tree</strong> 树形控件是我实习的时候封装的第一个组件。但是在当时， <strong>渲染节点数量控制</strong> ，<strong>节点信息修改</strong> ，<strong>组件代码结构</strong> 这些问题以自己的能力都很难完美解决，也导致在最后的答辩中的失利。</p>
 <p>现在来复盘一下该组件应该如何设计，并借鉴 <strong>github</strong> 上的 <strong>semi design</strong> ，阅读一下企业组件库的源码是如何设计 <strong>Tree</strong> 树形控件的。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree</a></li>
+</ul>
 <hr>
 <h1 id="data-structure"><a href="#data-structure" class="headerlink" title="data structure"></a>data structure</h1><p>首先要考虑到组件所接收的 <strong>treeData</strong> 数据结构，在实习的时候，由于后台接口原因，数据是这样的：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> treeData = [</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;亚洲&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Asia&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;0&#x27;</span>, <span class="attr">parent</span>: <span class="literal">null</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;中国&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;China&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;0-0&#x27;</span>, <span class="attr">parent</span>: <span class="string">&#x27;0&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;日本&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Japan&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;0-1&#x27;</span>, <span class="attr">parent</span>: <span class="string">&#x27;0&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">label</span>: <span class="string">&#x27;北美洲&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;North America&#x27;</span>, <span class="attr">key</span>: <span class="string">&#x27;1&#x27;</span>, <span class="attr">parent</span>: <span class="literal">null</span>&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
@@ -459,7 +462,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

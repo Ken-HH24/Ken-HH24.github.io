@@ -150,6 +150,82 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/" class="post-title-link" itemprop="url">fre source code - schedule篇</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-11-26 09:25:21" itemprop="dateCreated datePublished" datetime="2021-11-26T09:25:21+08:00">2021-11-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-16 15:11:52" itemprop="dateModified" datetime="2021-12-16T15:11:52+08:00">2021-12-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p>偶然了解到 <strong>fre</strong> 这个框架，甚至不能称他为框架，因为他太 “小” 了，作者是这样定义他的： <strong>Tiny Concurrent UI library with Fiber</strong> 。</p>
+<p>虽然代码量极小，却以相同的 <strong>fiber</strong> 思路，实现了 <strong>React</strong> 中的大量功能。对于想了解 <strong>React</strong>， 却又对庞大的源码无从下手的人来说，是一个极佳的学习资源。接下来就从不到 50 行的 <strong>schedule</strong> 模块开始分析 <strong>fre</strong> 是如何运作的。</p>
+<hr>
+<h1 id="schedule"><a href="#schedule" class="headerlink" title="schedule"></a>schedule</h1><p><strong>schedule</strong> 函数很简单，仅仅是把任务 <strong>push</strong> 到了队列 <strong>queue</strong> 里面，然后执行 <strong>postTask</strong> 函数。而 <strong>postTask</strong> 一开始是一个变量，他指向 <strong>task(false)</strong> ，开启了一个微任务执行 <strong>flush</strong> 函数。对源码进行一下翻译就是：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 源码</span></span><br><span class="line"><span class="keyword">let</span> postTask = task(<span class="literal">false</span>)</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; postTask()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 翻译后</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> schedule = (task: <span class="built_in">any</span>): <span class="function"><span class="params">void</span> =&gt;</span> &#123;</span><br><span class="line">  queue.push(task) &amp;&amp; <span class="built_in">Promise</span>.resolve().then(flush)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/24/Component%20-%20Form%E8%A1%A8%E5%8D%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -181,7 +257,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:25:13" itemprop="dateModified" datetime="2021-12-16T19:25:13+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:40:58" itemprop="dateModified" datetime="2021-12-22T10:40:58+08:00">2021-12-22</time>
               </span>
 
           
@@ -196,6 +272,9 @@
 
       
           <p>在众多组件实现中，<strong>Form</strong> 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Form">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Form</a></li>
+</ul>
 <h1 id="组件形态"><a href="#组件形态" class="headerlink" title="组件形态"></a>组件形态</h1><p>为了更好表达 <strong>H5</strong> 的语义化，同时模仿 <strong>ant design</strong> 的实现，可以有以下初步的设计：每一个表单子项使用 <strong>&lt;FormItem&gt;</strong> 标签包裹，里面可以选择不同的输入项如 <strong>&lt;Input&gt;</strong> ，<strong>&lt;CheckBox&gt;</strong> 等</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">FormItem</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Input</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">FormItem</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">CheckBox</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;reset&#x27;</span> <span class="attr">value</span>=<span class="string">&#x27;reset&#x27;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;submit&#x27;</span> <span class="attr">value</span>=<span class="string">&#x27;submit&#x27;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br></pre></td></tr></table></figure>
           <!--noindex-->
@@ -255,7 +334,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 15:04:12" itemprop="dateModified" datetime="2021-12-16T15:04:12+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:21" itemprop="dateModified" datetime="2021-12-22T10:41:21+08:00">2021-12-22</time>
               </span>
 
           
@@ -269,7 +348,10 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="BrowserRouter"><a href="#BrowserRouter" class="headerlink" title="BrowserRouter"></a>BrowserRouter</h1><h2 id="history-amp-location"><a href="#history-amp-location" class="headerlink" title="history &amp; location"></a>history &amp; location</h2><p><strong>react-router</strong> 库中的 <strong>BrowserRouter</strong> 是利用 <strong>history</strong> 这个 <strong>api</strong> ，通过监听 <strong>popstate</strong> 动作实现的。</p>
+          <h1 id="BrowserRouter"><a href="#BrowserRouter" class="headerlink" title="BrowserRouter"></a>BrowserRouter</h1><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/react-router">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/react-router</a></li>
+</ul>
+<h2 id="history-amp-location"><a href="#history-amp-location" class="headerlink" title="history &amp; location"></a>history &amp; location</h2><p><strong>react-router</strong> 库中的 <strong>BrowserRouter</strong> 是利用 <strong>history</strong> 这个 <strong>api</strong> ，通过监听 <strong>popstate</strong> 动作实现的。</p>
 <p><strong>history</strong> 对象可以利用 <strong>createBrowserHistory()</strong> 这个方法获取，然后用 <strong>useMemo</strong> 缓存起来。</p>
 <p><strong>location</strong> 则使用 <strong>useState</strong> 保存，方便进行监听变化后重新触发渲染。</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> history = useMemo(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    rootHistory = createBrowserHistory();</span><br><span class="line">    <span class="keyword">return</span> rootHistory;</span><br><span class="line">&#125;, []);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> [location, setLocation] = useState(history.location);</span><br><span class="line"></span><br><span class="line">useEffect(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 注册监听，返回一个移除监听函数</span></span><br><span class="line">    <span class="keyword">const</span> unlisten = history.listen(<span class="function">(<span class="params">history</span>) =&gt;</span> &#123;</span><br><span class="line">        setLocation(history.location);</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 移除监听</span></span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">        unlisten &amp;&amp; unlisten();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, []);</span><br></pre></td></tr></table></figure>
@@ -585,7 +667,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

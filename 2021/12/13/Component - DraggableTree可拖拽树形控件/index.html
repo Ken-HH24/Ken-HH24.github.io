@@ -28,7 +28,7 @@
 <meta property="og:description" content="preview在上一次组件实践中模仿了 semi design 完成了 Tree树形控件 的基本功能。在这基础上可以添加许多额外功能，比如 select ，checkbox 的支持。但是这些都稍显简单了，基本思路就是在 TreeNode 里添加相应的事件监听，然后根据 F &#x2F; A 架构在 TreeFoundation.js 里书写逻辑，添加对应的 selectedKeys 或者 checkedKe">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-12-13T06:19:11.000Z">
-<meta property="article:modified_time" content="2021-12-16T11:24:41.357Z">
+<meta property="article:modified_time" content="2021-12-22T02:40:50.695Z">
 <meta property="article:author" content="Ken">
 <meta property="article:tag" content="Component">
 <meta name="twitter:card" content="summary">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:24:41" itemprop="dateModified" datetime="2021-12-16T19:24:41+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:40:50" itemprop="dateModified" datetime="2021-12-22T10:40:50+08:00">2021-12-22</time>
               </span>
 
           
@@ -207,6 +207,9 @@
 <li>如何在拖拽的过程中提供较良好的用户体验，比如在用户拖动到文件夹上时，该结构会自动展开。又或者添加适当的提醒让用户知道现在的拖拽结果</li>
 </ol>
 <p>而以上问题都在阅读 <strong>semi design</strong> 源码，并自己动手实践后得到解决。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Tree</a></li>
+</ul>
 <hr>
 <h1 id="draggable"><a href="#draggable" class="headerlink" title="draggable"></a>draggable</h1><p>首先要达到可拖拽的效果，就需要使用 <strong>draggable</strong> 这个 <strong>API</strong> ，首先需要显式地在标签里添加 <strong>draggable = ‘true’</strong> 而不能只写 <strong>draggable</strong> 。</p>
 <p>然后为每个 <strong>TreeNode</strong> 添加 <strong>onDragStart</strong> ， <strong>onDragEnter</strong> 等事件。其中在 <strong>onDragStart</strong> 事件中，需要特别地调用 <code>e.dataTransfer.setData(&#39;text/plain&#39;, &#39;&#39;);</code> ，否则在某些浏览器内不会生效。另外在拖拽 <strong>&lt;li&gt;</strong> 标签的过程中会发现鼠标状态一直是一个禁止的图标，非常影响用户体验，要解决这个问题则需要在其他 <strong>drag</strong> 事件中添加 <code>e.dataTransfer.dropEffect = &#39;move&#39;;</code> ，改为移动图标。</p>
@@ -405,7 +408,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

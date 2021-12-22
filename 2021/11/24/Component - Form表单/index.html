@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="在众多组件实现中，Form 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。 组件形态为了更好表达 H5 的语义化，同时模仿 ant design 的实现，可以有以下初步的设计：每一个表单子项使用 &lt;FormItem&gt; 标签包裹，里面可以选择不同的输入项如 &lt;Input&gt; ，&lt;CheckBox&amp;gt">
+  <meta name="description" content="在众多组件实现中，Form 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。  https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24&#x2F;Ken-HH24.github.io&#x2F;tree&#x2F;demo-typescript&#x2F;src&#x2F;components&#x2F;Form  组件形态为了更好表达 H5 的语义化，同时模仿 ant design 的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Component - Form表单">
 <meta property="og:url" content="http://example.com/2021/11/24/Component%20-%20Form%E8%A1%A8%E5%8D%95/index.html">
 <meta property="og:site_name" content="Ken&#39;s blog">
-<meta property="og:description" content="在众多组件实现中，Form 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。 组件形态为了更好表达 H5 的语义化，同时模仿 ant design 的实现，可以有以下初步的设计：每一个表单子项使用 &lt;FormItem&gt; 标签包裹，里面可以选择不同的输入项如 &lt;Input&gt; ，&lt;CheckBox&amp;gt">
+<meta property="og:description" content="在众多组件实现中，Form 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。  https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24&#x2F;Ken-HH24.github.io&#x2F;tree&#x2F;demo-typescript&#x2F;src&#x2F;components&#x2F;Form  组件形态为了更好表达 H5 的语义化，同时模仿 ant design 的">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-11-24T08:47:48.000Z">
-<meta property="article:modified_time" content="2021-12-16T11:25:13.815Z">
+<meta property="article:modified_time" content="2021-12-22T02:40:58.688Z">
 <meta property="article:author" content="Ken">
 <meta property="article:tag" content="Component">
 <meta name="twitter:card" content="summary">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 19:25:13" itemprop="dateModified" datetime="2021-12-16T19:25:13+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:40:58" itemprop="dateModified" datetime="2021-12-22T10:40:58+08:00">2021-12-22</time>
               </span>
 
           
@@ -201,6 +201,9 @@
 
       
         <p>在众多组件实现中，<strong>Form</strong> 表单组件可能算是比较困难的一个，因为他需要包含对输入内容的管理，校验，重置以及提交等功能。在实现的过程中，收获了许多。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Form">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Form</a></li>
+</ul>
 <h1 id="组件形态"><a href="#组件形态" class="headerlink" title="组件形态"></a>组件形态</h1><p>为了更好表达 <strong>H5</strong> 的语义化，同时模仿 <strong>ant design</strong> 的实现，可以有以下初步的设计：每一个表单子项使用 <strong>&lt;FormItem&gt;</strong> 标签包裹，里面可以选择不同的输入项如 <strong>&lt;Input&gt;</strong> ，<strong>&lt;CheckBox&gt;</strong> 等</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">FormItem</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Input</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">FormItem</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">CheckBox</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;reset&#x27;</span> <span class="attr">value</span>=<span class="string">&#x27;reset&#x27;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&#x27;submit&#x27;</span> <span class="attr">value</span>=<span class="string">&#x27;submit&#x27;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">FormItem</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
@@ -552,7 +555,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>

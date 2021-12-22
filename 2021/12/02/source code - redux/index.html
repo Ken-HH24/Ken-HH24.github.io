@@ -20,15 +20,15 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="previewredux 是著名的 JavaScript 状态管理库，翻看 github 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。  createStoredispatch既然是负责状态管理，那么 redux 就应该有一个 store 来存储数据。store 里面的数据不可直接改变，而是委托一个 dispatch 函数来完成，通过派发 action ，">
+  <meta name="description" content="previewredux 是著名的 JavaScript 状态管理库，翻看 github 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。  https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24&#x2F;Ken-HH24.github.io&#x2F;tree&#x2F;demo-typescript&#x2F;src&#x2F;redux   createStoredispatch既然是负责状态管理，那">
 <meta property="og:type" content="article">
 <meta property="og:title" content="source code - redux">
 <meta property="og:url" content="http://example.com/2021/12/02/source%20code%20-%20redux/index.html">
 <meta property="og:site_name" content="Ken&#39;s blog">
-<meta property="og:description" content="previewredux 是著名的 JavaScript 状态管理库，翻看 github 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。  createStoredispatch既然是负责状态管理，那么 redux 就应该有一个 store 来存储数据。store 里面的数据不可直接改变，而是委托一个 dispatch 函数来完成，通过派发 action ，">
+<meta property="og:description" content="previewredux 是著名的 JavaScript 状态管理库，翻看 github 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。  https:&#x2F;&#x2F;github.com&#x2F;Ken-HH24&#x2F;Ken-HH24.github.io&#x2F;tree&#x2F;demo-typescript&#x2F;src&#x2F;redux   createStoredispatch既然是负责状态管理，那">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-12-02T02:08:10.000Z">
-<meta property="article:modified_time" content="2021-12-16T07:04:14.445Z">
+<meta property="article:modified_time" content="2021-12-22T02:41:24.670Z">
 <meta property="article:author" content="Ken">
 <meta property="article:tag" content="source code">
 <meta name="twitter:card" content="summary">
@@ -186,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-12-16 15:04:14" itemprop="dateModified" datetime="2021-12-16T15:04:14+08:00">2021-12-16</time>
+                <time title="Modified: 2021-12-22 10:41:24" itemprop="dateModified" datetime="2021-12-22T10:41:24+08:00">2021-12-22</time>
               </span>
 
           
@@ -201,6 +201,9 @@
 
       
         <h1 id="preview"><a href="#preview" class="headerlink" title="preview"></a>preview</h1><p><strong>redux</strong> 是著名的 <strong>JavaScript</strong> 状态管理库，翻看 <strong>github</strong> 的源码会发现，核心代码的实现简洁而又巧妙。通过自己敲代码实践可以加深对核心思想的理解。</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/redux">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/redux</a></li>
+</ul>
 <hr>
 <h1 id="createStore"><a href="#createStore" class="headerlink" title="createStore"></a>createStore</h1><h2 id="dispatch"><a href="#dispatch" class="headerlink" title="dispatch"></a>dispatch</h2><p>既然是负责状态管理，那么 <strong>redux</strong> 就应该有一个 <strong>store</strong> 来存储数据。<strong>store</strong> 里面的数据不可直接改变，而是委托一个 <strong>dispatch</strong> 函数来完成，通过派发 <strong>action</strong> ，交由 <strong>reducer</strong> 来产生新的状态 <strong>state</strong> 。</p>
 <p>因此 <strong>createStore</strong> 函数的参数包括：</p>
@@ -364,7 +367,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-count">16</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
