@@ -1,10 +1,10 @@
 import React from 'react';
-import CascaderDemo from './components/Cascader/demo';
+import TransitionDemo from './react-transition-group/demo';
 
 function App() {
   return (
     <div className="App">
-      <CascaderDemo />
+      <TransitionDemo />
     </div>
   );
 }

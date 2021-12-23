@@ -1,0 +1,25 @@
+.demo-enter {
+    opacity: 0;
+}
+
+.demo-enter-active {
+    opacity: 1;
+    transition: all 1s ease-in-out;
+}
+
+.demo-enter-done {
+    opacity: 1;
+}
+
+.demo-exit {
+    opacity: 1;
+}
+
+.demo-exit-active {
+    opacity: 0;
+    transition: all 1s ease-in-out;
+}
+
+.demo-exit-done {
+    opacity: 0;
+}

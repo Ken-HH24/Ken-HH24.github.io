@@ -1,0 +1,31 @@
+.list-fade-enter {
+    transform: translate(100%, 0);
+    opacity: 0;
+}
+
+.list-fade-enter-active {
+    transform: translate(0, 0);
+    opacity: 1;
+    transition: all 2s;
+}
+
+.list-fade-enter-done {
+    transform: translate(0, 0);
+    opacity: 1;
+}
+
+.list-fade-exit {
+    transform: translate(0, 0);
+    opacity: 1;
+}
+
+.list-fade-exit-active {
+    transform: translate(-100%, 0);
+    opacity: 0;
+    transition: all 2s;
+}
+
+.list-fade-exit-done {
+    transform: translate(-100%, 0);
+    opacity: 0;
+}
