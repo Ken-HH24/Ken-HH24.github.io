@@ -8,9 +8,13 @@ class TransitionGroup extends React.Component {
         super(props);
         const handleExited = this.handleExited.bind(this);
 
+        this.deleteAction = false;
+        this.lastNodeRefs = [];
+
         this.state = {
             firstRender: true,
             status: ENTERED,
+            nodeRefs: [],
             children: {},
             handleExited
         }
@@ -22,15 +26,50 @@ class TransitionGroup extends React.Component {
         })
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        console.log(prevState.children, this.state.children);
+    // FLIP
+    componentDidUpdate() {
+        const currentRectMap = this.state.rectMap;
+
+        if (this.lastRectMap) {
+            const lastRectMap = this.lastRectMap;
+
+            for (const ref of currentRectMap.keys()) {
+                if (lastRectMap.has(ref)) {
+                    const prevPosition = lastRectMap.get(ref);
+                    const currentPosition = currentRectMap.get(ref);
+
+                    const invert = {
+                        left: prevPosition.left - currentPosition.left,
+                        top: prevPosition.top - currentPosition.top
+                    }
+
+                    const keyframes = [
+                        {
+                            transform: `translate(${invert.left}px, ${invert.top}px)`,
+                        },
+                        { transform: "translate(0)" },
+                    ]
+
+                    const options = {
+                        duration: 300,
+                        easing: "cubic-bezier(0,0,0.32,1)",
+                    }
+
+                    ref.animate(keyframes, options)
+                }
+            }
+        }
+
+        this.lastRectMap = currentRectMap;
     }
 
     static getDerivedStateFromProps(nextProps, { children: prevChildrenMapping, firstRender, handleExited }) {
+        const { result, rectMap } = firstRender
+            ? getInitialChildMapping(nextProps.children)
+            : getNextChildMapping(nextProps, prevChildrenMapping, handleExited);
         return {
-            children: firstRender
-                ? getInitialChildMapping(nextProps.children)
-                : getNextChildMapping(nextProps, prevChildrenMapping, handleExited),
+            rectMap,
+            children: result,
             firstRender: false
         }
     }

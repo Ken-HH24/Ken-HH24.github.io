@@ -86,7 +86,7 @@ function TransitionDemo() {
                                 timeout={2000}
                                 classNames='list-fade'
                             >
-                                <div>
+                                <div key={item.value}>
                                     <span>{item.value}</span>
                                     <button onClick={() => { handleDelete(index) }}>delete</button>
                                 </div>

@@ -2,12 +2,23 @@ import React from 'react';
 
 function getChildrenMapping(children, callback = (c) => c) {
     const result = Object.create(null);
+    const rectMap = new Map();
 
-    React.Children.forEach(children, (c) => {
-        result[c.key] = callback(c)
+    React.Children.forEach(children, (c, index) => {
+        result[c.key] = React.cloneElement(callback(c), {
+            ref: (node) => {
+                if (node) {
+                    // console.log(node, node.getBoundingClientRect());
+                    rectMap.set(node, node.getBoundingClientRect());
+                }
+            }
+        })
     })
 
-    return result;
+    return {
+        result,
+        rectMap
+    };
 }
 
 function mergeMappings(prev, next) {
@@ -25,7 +36,7 @@ export function getNextChildMapping(nextProps, prevChildrenMapping, handleExited
     const result = Object.create(null);
 
     const nextChildren = nextProps.children;
-    const nextChildrenMapping = getChildrenMapping(nextChildren);
+    const { result: nextChildrenMapping, rectMap } = getChildrenMapping(nextChildren);
 
     const mergeMapping = mergeMappings(prevChildrenMapping, nextChildrenMapping);
 
@@ -56,5 +67,8 @@ export function getNextChildMapping(nextProps, prevChildrenMapping, handleExited
         }
     })
 
-    return result;
+    return {
+        result,
+        rectMap
+    };
 }
