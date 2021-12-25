@@ -150,6 +150,92 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ken">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ken's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/" class="post-title-link" itemprop="url">Component - Modal弹窗</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-11-26 15:26:25" itemprop="dateCreated datePublished" datetime="2021-11-26T15:26:25+08:00">2021-11-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-22 10:41:02" itemprop="dateModified" datetime="2021-12-22T10:41:02+08:00">2021-12-22</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>弹窗组件的实现看起来并不困难，只需在组件内添加一个容器，一个背景蒙版，然后通过 <strong>visible</strong> 变量来控制显示即可。</p>
+<p>但是这次实现的弹窗组件不局限于简单的功能需求，还包括以下特点：</p>
+<ol>
+<li><p>使用 <strong>ReactDOM.createPortal</strong> 渲染到挂载的容器之外</p>
+</li>
+<li><p>提供两种使用方式，一种是传统的插槽模式：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;Modal</span><br><span class="line">    title=<span class="string">&#x27;Hello World&#x27;</span></span><br><span class="line">    visible=&#123;visible&#125;</span><br><span class="line">    onClose=&#123;onClose&#125;</span><br><span class="line">&gt;</span><br><span class="line">    <span class="xml"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span></span><br><span class="line"><span class="xml">        <span class="tag">&lt;<span class="name">span</span>&gt;</span>This is a Modal Component<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line"><span class="xml">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">&lt;/Modal&gt;</span><br></pre></td></tr></table></figure></li>
+<li><p>另外一种是直接调用 <strong>Modal</strong> 的 <strong>API</strong> 进行控制：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  弹窗显示</span></span><br><span class="line">Modal.show(&#123;</span><br><span class="line">    <span class="attr">title</span>: <span class="string">&#x27;Hello World&#x27;</span>,</span><br><span class="line">    <span class="attr">visible</span>: visible,</span><br><span class="line">    <span class="attr">onClose</span>: <span class="function">() =&gt;</span> &#123; setVisible(<span class="literal">false</span>) &#125;</span><br><span class="line">    <span class="attr">content</span>: <span class="xml"><span class="tag">&lt;<span class="name">span</span>&gt;</span>This is a Modal Component<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">Modal.unMount()  <span class="comment">//  弹窗卸载</span></span><br></pre></td></tr></table></figure></li>
+<li><p>为弹窗的显示与消失添加动画，不依赖任何库</p>
+</li>
+</ol>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Dialog">https://github.com/Ken-HH24/Ken-HH24.github.io/tree/demo-typescript/src/components/Dialog</a></li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/11/26/Component%20-%20Modal%E5%BC%B9%E7%AA%97/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/26/fre%20source%20code%20-%20schedule%E7%AF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -667,7 +753,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-count">17</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
