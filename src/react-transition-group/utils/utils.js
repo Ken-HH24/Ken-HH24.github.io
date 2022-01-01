@@ -8,7 +8,6 @@ function getChildrenMapping(children, callback = (c) => c) {
         result[c.key] = React.cloneElement(callback(c), {
             ref: (node) => {
                 if (node) {
-                    // console.log(node, node.getBoundingClientRect());
                     rectMap.set(node, node.getBoundingClientRect());
                 }
             }

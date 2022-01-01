@@ -101,6 +101,7 @@ class SwitchTransition extends React.Component {
             }
         }
 
+        // 实时保留children
         return {
             current: React.cloneElement(props.children, {
                 in: true,

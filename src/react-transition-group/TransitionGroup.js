@@ -8,13 +8,9 @@ class TransitionGroup extends React.Component {
         super(props);
         const handleExited = this.handleExited.bind(this);
 
-        this.deleteAction = false;
-        this.lastNodeRefs = [];
-
         this.state = {
             firstRender: true,
             status: ENTERED,
-            nodeRefs: [],
             children: {},
             handleExited
         }
@@ -95,39 +91,5 @@ class TransitionGroup extends React.Component {
         )
     }
 }
-
-// const TransitionGroup = (props) => {
-//     const firstRender = useRef(true);
-//     const childrenMapRef = useRef({});
-//     const [, forceUpdate] = useState({});
-
-//     let childrenMap;
-//     const handleExited = (child) => {
-//         const newChildrenMap = { ...childrenMapRef.current };
-//         delete newChildrenMap[child.key];
-//         childrenMapRef.current = newChildrenMap;
-//         forceUpdate({});
-//     }
-
-//     if (firstRender.current === true) {
-//         firstRender.current = false;
-//         childrenMap = getInitialChildMapping(props.children);
-//     } else {
-//         childrenMap = getNextChildMapping(props, childrenMapRef.current, handleExited);
-//     }
-
-//     useLayoutEffect(() => {
-//         console.log('layout')
-//     }, [])
-
-//     childrenMapRef.current = childrenMap;
-//     const component = Object.values(childrenMap);
-
-//     return (
-//         <TransitionGroupContext.Provider value={null}>
-//             {component}
-//         </TransitionGroupContext.Provider>
-//     )
-// }
 
 export default TransitionGroup;
